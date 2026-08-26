@@ -127,7 +127,7 @@ function cardHTML(pkg, first) {
              <div class="pkg-stat"><span>Data</span><strong>${formatData(pkg.dataGb)}</strong></div>
              <div class="pkg-stat"><span>Valid</span><strong>${formatValidity(pkg.validityDays)}</strong></div>
            </div>
-           <ul class="pkg-features">${pkg.features.map((f) => `<li>✓ ${f}</li>`).join("")}</ul>`
+           <ul class="pkg-features">${pkg.features.map((f) => `<li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${f}</li>`).join("")}</ul>`
         : pkg.kind === "aether"
           ? `<p class="pkg-kicker">${pkg.kicker}</p>
              <h3 class="pkg-name">${pkg.name}</h3>
@@ -468,6 +468,12 @@ document.addEventListener("DOMContentLoaded", () => {
       startMusic();
     } else stopMusic();
     document.getElementById("audio-toggle").setAttribute("aria-label", musicOn ? "Mute music" : "Play music");
+    const onIco = document.querySelector(".ico-vol-on");
+    const offIco = document.querySelector(".ico-vol-off");
+    if (onIco && offIco) {
+      onIco.classList.toggle("hidden", !musicOn);
+      offIco.classList.toggle("hidden", musicOn);
+    }
   });
 
   document.body.addEventListener("click", (e) => {
