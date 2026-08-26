@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#152048" />
+  <title>Lumi — Instant eSIM for Pakistan</title>
+  <link rel="icon" href="favicon.svg" />
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <div class="chrome">
+      <header class="header">
+        <a class="logo" href="#home" data-view="home" aria-label="Lumi home">
+          <span class="logo-mark" aria-hidden="true">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+              <path d="M12 3l7 4v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7l7-4z" stroke="currentColor" stroke-width="1.8"/>
+            </svg>
+          </span>
+          <span class="logo-copy">
+            <span class="logo-word">LUMI</span>
+            <span class="logo-tag">eSIM</span>
+          </span>
+        </a>
+        <div class="header-end">
+          <button type="button" class="audio-toggle" id="audio-toggle" aria-label="Mute music">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M11 5L6 9H3v6h3l5 4V5z"/>
+              <path d="M15.5 8.5a5 5 0 010 7"/>
+            </svg>
+          </button>
+        </div>
+      </header>
+    </div>
+
+    <div class="stage" id="stage">
+      <!-- HOME -->
+      <div class="view is-on" id="view-home">
+        <section class="hero">
+          <div class="hero-copy">
+            <p class="eyebrow"><span class="eyebrow-dot"></span> eSIM for Pakistan</p>
+            <h1>Data that installs itself.</h1>
+          </div>
+          <div class="trust">
+            <div class="trust-item">
+              <span class="trust-ico trust-ico--zap" aria-hidden="true">⚡</span>
+              <strong>Instant</strong>
+              After payment
+            </div>
+            <div class="trust-item">
+              <span class="trust-ico trust-ico--radio" aria-hidden="true">◉</span>
+              <strong>3 networks</strong>
+              Zong · Telenor · Jazz
+            </div>
+            <div class="trust-item">
+              <span class="trust-ico trust-ico--ban" aria-hidden="true">▣</span>
+              <strong>No QR</strong>
+              Automatic install
+            </div>
+          </div>
+        </section>
+        <div id="packages-home"></div>
+      </div>
+
+      <!-- INSTALL -->
+      <div class="view" id="view-install">
+        <main class="page page--flush">
+          <p class="eyebrow"><span class="eyebrow-dot"></span> How to install</p>
+          <h1>Five steps. Then data.</h1>
+          <p class="lede">The path is the same for every package. There is no QR-code flow.</p>
+          <button type="button" class="pkg-cta page-cta" id="choose-package">Choose a package</button>
+          <div class="steps">
+            <article class="step"><span class="step-num">1</span><div><h2>Choose your package</h2><p>Spark, Pulse, Drift, or Aether. Prices are on the card.</p></div></article>
+            <article class="step"><span class="step-num">2</span><div><h2>Select your network</h2><p>Zong is selected by default. Switch to Telenor or Jazz on that card only.</p></div></article>
+            <article class="step"><span class="step-num">3</span><div><h2>Tap Install eSIM</h2><p>We check what this browser can tell us about your device.</p></div></article>
+            <article class="step"><span class="step-num">4</span><div><h2>Complete payment</h2><p>Pay for the package you selected. No extra forms after that.</p></div></article>
+            <article class="step"><span class="step-num">5</span><div><h2>Your eSIM installs automatically</h2><p>No QR code. On a compatible phone, the profile installs after payment.</p></div></article>
+          </div>
+        </main>
+        <div id="packages-install"></div>
+      </div>
+
+      <!-- ABOUT -->
+      <div class="view" id="view-about">
+        <main class="page">
+          <div class="page-visual">
+            <img src="images/earth-night.webp" alt="" width="1400" height="788" />
+          </div>
+          <p class="eyebrow"><span class="eyebrow-dot"></span> About Lumi</p>
+          <h1>Mobile data, without the shop.</h1>
+          <p class="lede">Lumi sells eSIM packages for Zong, Telenor and Jazz. You choose a plan, pick a network, pay, and the eSIM installs on your phone. No plastic SIM. No QR code. No counter.</p>
+          <div class="pillars">
+            <article class="pillar">
+              <span class="icon-chip">📱</span>
+              <h2>Easy activation</h2>
+              <p>Tap Install eSIM. After payment, the profile is meant to land on your device automatically.</p>
+            </article>
+            <article class="pillar">
+              <span class="icon-chip">📡</span>
+              <h2>Reliable networks</h2>
+              <p>The same networks you already know — Zong, Telenor, and Jazz — selected independently on each package.</p>
+            </article>
+            <article class="pillar">
+              <span class="icon-chip">◇</span>
+              <h2>Simple buying</h2>
+              <p>Four clear packages. One tap. A short device check, then payment. That is the whole path.</p>
+            </article>
+          </div>
+        </main>
+      </div>
+
+      <footer class="site-foot">Lumi · Instant eSIM for Pakistan</footer>
+    </div>
+
+    <nav class="bottom-nav" aria-label="Primary">
+      <button type="button" class="tab is-active" data-view="home">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 10.5L12 4l8 6.5V20a1 1 0 01-1 1h-5v-6H10v6H5a1 1 0 01-1-1v-9.5z"/></svg>
+        Home
+      </button>
+      <button type="button" class="tab" data-view="install">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>
+        Install
+      </button>
+      <button type="button" class="tab" data-view="about">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3a14 14 0 010 18M12 3a14 14 0 000 18"/></svg>
+        About
+      </button>
+    </nav>
+  </div>
+
+  <div class="modal-overlay hidden" id="modal-overlay"></div>
+  <div class="modal-center hidden" id="modal" role="dialog" aria-modal="true">
+    <div class="modal-sheet">
+      <div class="modal-handle"></div>
+      <button type="button" class="modal-close" id="modal-close" aria-label="Close">✕</button>
+      <div id="modal-body"></div>
+    </div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
