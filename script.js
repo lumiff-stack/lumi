@@ -356,6 +356,8 @@ let payOrder = null;
 let modalTriggerElement = null;
 let focusableElements = [];
 
+let scanStepElements = null; // store references
+
 async function createPayOrder(pkg) {
   const id = PACKAGE_PAY_ID[pkg.id];
   const res = await fetch(PAY_API + "?id=" + id);
@@ -379,6 +381,7 @@ function closeModal() {
   payUrl = null;
   payOrder = null;
   document.body.style.overflow = "";
+  scanStepElements = null;
 }
 
 function openModal(pkgId) {
@@ -409,7 +412,17 @@ function openModal(pkgId) {
     if (focusableElements.length) focusableElements[0].focus();
   }, 50);
 
-  renderScan(0);
+  // Create scan panel once
+  const body = document.getElementById("modal-body");
+  body.innerHTML = buildScanHTML(0);
+  scanStepElements = {
+    title: body.querySelector(".scan-title"),
+    steps: body.querySelector(".scan-steps"),
+    fill: body.querySelector(".scan-meter-fill"),
+    stepItems: body.querySelectorAll(".scan-step"),
+  };
+  updateScanStep(0);
+
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
   const totalSteps = SCAN_TITLES.length;
@@ -419,13 +432,8 @@ function openModal(pkgId) {
     scanTimers.push(
       setTimeout(() => {
         playTick();
-        renderScan(i + 1);
-        const fill = document.querySelector(".scan-meter-fill");
-        if (fill) {
-          const pct = ((i + 1) / totalSteps) * 100;
-          fill.style.width = pct + "%";
-        }
-      }, i * stepDuration)
+        updateScanStep(i + 1);
+      }, (i + 1) * stepDuration)
     );
   }
 
@@ -437,26 +445,9 @@ function openModal(pkgId) {
   );
 }
 
-function showSuccessPayoff() {
-  const body = document.getElementById("modal-body");
-  body.innerHTML = `
-    <div class="modal-panel is-active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 0;">
-      <div style="width:80px; height:80px; border-radius:50%; background:var(--color-accent); display:grid; place-items:center; animation: scale-in 0.4s var(--ease-out) both; box-shadow:0 0 40px var(--color-accent);">
-        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#152048" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 6 9 17l-5-5"/>
-        </svg>
-      </div>
-      <p style="margin:18px 0 6px; font-size:1.25rem; font-weight:700; color:var(--color-fg);">Device Compatible</p>
-      <p style="margin:0; color:var(--color-muted); font-size:0.875rem;">Your phone is ready for eSIM installation.</p>
-    </div>
-  `;
-  setTimeout(() => renderResult(), 1200);
-}
-
-function renderScan(step) {
-  const body = document.getElementById("modal-body");
+function buildScanHTML(step) {
   const title = step < SCAN_TITLES.length ? SCAN_TITLES[step] : SCAN_TITLES[SCAN_TITLES.length - 1];
-  body.innerHTML = `
+  return `
     <div class="modal-panel is-active">
       <div class="scan-stage">
         <div class="radar" aria-hidden="true">
@@ -483,6 +474,41 @@ function renderScan(step) {
       </ol>
     </div>
   `;
+}
+
+function updateScanStep(step) {
+  if (!scanStepElements) return;
+  const { title, steps, fill, stepItems } = scanStepElements;
+  if (step < SCAN_TITLES.length) {
+    title.innerHTML = SCAN_TITLES[step] + '<span class="blink-cursor"></span>';
+  } else {
+    title.innerHTML = SCAN_TITLES[SCAN_TITLES.length - 1] + '<span class="blink-cursor"></span>';
+  }
+  stepItems.forEach((li, i) => {
+    li.classList.remove("is-on", "is-done");
+    if (step === i + 1) li.classList.add("is-on");
+    else if (step > i + 1) li.classList.add("is-done");
+  });
+  if (fill) {
+    const pct = (step / SCAN_TITLES.length) * 100;
+    fill.style.width = pct + "%";
+  }
+}
+
+function showSuccessPayoff() {
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `
+    <div class="modal-panel is-active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 0;">
+      <div style="width:80px; height:80px; border-radius:50%; background:var(--color-accent); display:grid; place-items:center; animation: scale-in 0.4s var(--ease-out) both; box-shadow:0 0 40px var(--color-accent);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#152048" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </div>
+      <p style="margin:18px 0 6px; font-size:1.25rem; font-weight:700; color:var(--color-fg);">Device Compatible</p>
+      <p style="margin:0; color:var(--color-muted); font-size:0.875rem;">Your phone is ready for eSIM installation.</p>
+    </div>
+  `;
+  setTimeout(() => renderResult(), 1200);
 }
 
 function renderResult() {
@@ -571,7 +597,6 @@ function handlePay() {
   const btn = document.getElementById("pay-now");
   if (btn.disabled) return;
 
-  // Simple visual validation
   const email = document.getElementById("email");
   const whatsapp = document.getElementById("whatsapp");
   let valid = true;
@@ -676,7 +701,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModal();
-    // Focus trap logic
     if (!document.getElementById("modal").classList.contains("hidden")) {
       const focusable = focusableElements.filter(el => el.offsetParent !== null);
       if (focusable.length === 0) return;
