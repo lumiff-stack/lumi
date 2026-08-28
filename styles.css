@@ -82,8 +82,6 @@ img { max-width: 100%; outline: none; }
   background: var(--color-bg);
 }
 
-/* Promo removed – dead code deleted */
-
 .header {
   display: flex;
   align-items: center;
@@ -215,8 +213,8 @@ img { max-width: 100%; outline: none; }
   padding: 0;
   margin: 0;
   box-sizing: border-box;
-  background: #0c1228;
-  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.16);
+  background: #0a0f1e;
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.08), 0 -4px 20px rgb(0 0 0 / 0.6);
 }
 
 .stage {
@@ -227,7 +225,6 @@ img { max-width: 100%; outline: none; }
   overflow-x: hidden;
   overflow-y: auto;
   overscroll-behavior: none;
-  -webkit-overflow-scrolling: touch;
   touch-action: pan-y;
   overflow-anchor: none;
   padding-bottom: 72px;
@@ -270,7 +267,7 @@ img { max-width: 100%; outline: none; }
 .hero {
   position: relative;
   overflow: hidden;
-  padding: clamp(8px, 2.2vw, 14px) clamp(12px, 4.2vw, 20px) 8px;
+  padding: clamp(16px, 4vw, 28px) clamp(12px, 4.2vw, 20px) 8px;
   background:
     radial-gradient(90% 70% at 100% 0%, rgb(62 232 212 / 0.22), transparent 55%),
     var(--color-bg);
@@ -445,8 +442,6 @@ img { max-width: 100%; outline: none; }
   z-index: 1;
 }
 
-/* REMOVED .pkg:active – cards no longer scale on tap */
-
 .pkg-kicker {
   margin: 0 0 4px;
   color: var(--color-muted);
@@ -516,7 +511,6 @@ img { max-width: 100%; outline: none; }
   pointer-events: none;
 }
 
-/* Staggered sheen delays for each card */
 .pkg:nth-child(1) .pkg-cta::after { animation-delay: 1.4s; }
 .pkg:nth-child(2) .pkg-cta::after { animation-delay: 2.2s; }
 .pkg:nth-child(3) .pkg-cta::after { animation-delay: 3.0s; }
@@ -670,8 +664,6 @@ img { max-width: 100%; outline: none; }
   margin-top: 10px;
 }
 
-/* Drift — two-up stats */
-
 .pkg-stats {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -725,7 +717,6 @@ img { max-width: 100%; outline: none; }
   color: var(--color-accent);
 }
 
-/* Aether — inner glass, more air */
 .pkg--aether {
   padding: 22px;
   background:
@@ -765,7 +756,6 @@ img { max-width: 100%; outline: none; }
   font-variant-numeric: tabular-nums;
 }
 
-/* Network selector */
 .network-pills {
   position: relative;
   isolation: isolate;
@@ -833,7 +823,7 @@ img { max-width: 100%; outline: none; }
   border-radius: 5px;
 }
 
-/* ——— Modal / scan ——— */
+/* ——— Modal ——— */
 
 .modal-overlay {
   position: fixed;
@@ -898,7 +888,6 @@ img { max-width: 100%; outline: none; }
   transition-timing-function: var(--ease-press);
 }
 
-/* --- Modal panels --- */
 .modal-panel {
   display: none;
   animation: page-in 300ms var(--ease-out) both;
@@ -907,7 +896,6 @@ img { max-width: 100%; outline: none; }
   display: block;
 }
 
-/* Scan panel */
 .scan-stage {
   display: grid;
   place-items: center;
@@ -940,7 +928,6 @@ img { max-width: 100%; outline: none; }
   animation: spin 1.8s linear infinite;
 }
 
-/* Additional radar dots (generated via JS) */
 .radar-dots {
   position: absolute;
   inset: 0;
@@ -1016,12 +1003,10 @@ img { max-width: 100%; outline: none; }
 
 .scan-meter-fill {
   display: block;
-  width: 0;
   height: 100%;
   background: linear-gradient(90deg, var(--color-accent), var(--color-gold));
-  animation: meter 10s linear forwards;
+  transition: width 0.3s ease;
 }
-/* For discrete jumps, we'll control via JS; keep the animation as fallback */
 
 .scan-steps {
   display: grid;
@@ -1068,7 +1053,6 @@ img { max-width: 100%; outline: none; }
   box-shadow: none;
 }
 
-/* Result panel */
 .result-kicker {
   margin: 4px 0 6px;
   color: var(--color-accent);
@@ -1148,7 +1132,6 @@ img { max-width: 100%; outline: none; }
   margin-top: 14px;
 }
 
-/* --- Checkout form panel --- */
 .checkout-summary {
   background: var(--color-bg);
   border-radius: 16px;
@@ -1495,7 +1478,6 @@ img { max-width: 100%; outline: none; }
   border: 0;
 }
 
-/* animations */
 @keyframes aurora {
   from { transform: translate3d(0, 0, 0) scale(1); }
   to { transform: translate3d(-4%, 3%, 0) scale(1.05); }
@@ -1532,10 +1514,6 @@ img { max-width: 100%; outline: none; }
   from { opacity: 0; transform: translateY(8px); }
   to { opacity: 1; transform: none; }
 }
-@keyframes meter {
-  from { width: 0%; }
-  to { width: 100%; }
-}
 @keyframes fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
@@ -1553,8 +1531,11 @@ img { max-width: 100%; outline: none; }
   88% { opacity: 1; }
   100% { top: 78%; opacity: 0; }
 }
+@keyframes scale-in {
+  from { transform: scale(0.7); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
 
-/* Responsive adjustments */
 @media (max-width: 359px) {
   .header { height: 48px; padding: 0 10px 0 12px; }
   .logo-word { font-size: 1.05rem; }
@@ -1595,5 +1576,3 @@ img { max-width: 100%; outline: none; }
     filter: none;
   }
 }
-
-/* dead classes removed */
