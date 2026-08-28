@@ -356,7 +356,7 @@ let payOrder = null;
 let modalTriggerElement = null;
 let focusableElements = [];
 
-let scanStepElements = null; // store references
+let scanStepElements = null;
 
 async function createPayOrder(pkg) {
   const id = PACKAGE_PAY_ID[pkg.id];
@@ -412,7 +412,7 @@ function openModal(pkgId) {
     if (focusableElements.length) focusableElements[0].focus();
   }, 50);
 
-  // Create scan panel once
+  // Build scan panel once
   const body = document.getElementById("modal-body");
   body.innerHTML = buildScanHTML(0);
   scanStepElements = {
@@ -668,6 +668,9 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAudioIcon();
   });
 
+  // Direct click listener for modal close (to guarantee it works)
+  document.getElementById("modal-close").addEventListener("click", closeModal);
+  // Also keep the delegated one for overlay and other cases
   document.body.addEventListener("click", (e) => {
     const netBtn = e.target.closest("[data-net]");
     if (netBtn) {
@@ -694,7 +697,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const getBtn = e.target.closest("[data-get]");
     if (getBtn) openModal(getBtn.dataset.get);
 
-    if (e.target.id === "modal-close" || e.target.id === "modal-overlay") {
+    if (e.target.id === "modal-overlay") {
       closeModal();
     }
   });
