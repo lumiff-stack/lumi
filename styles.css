@@ -214,7 +214,8 @@ img { max-width: 100%; outline: none; }
   margin: 0;
   box-sizing: border-box;
   background: #0a0f1e;
-  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.08), 0 -4px 20px rgb(0 0 0 / 0.6);
+  box-shadow: 0 -1px 0 rgb(255 255 255 / 0.06), 0 -4px 20px rgba(0, 0, 0, 0.7);
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .stage {
@@ -909,6 +910,7 @@ img { max-width: 100%; outline: none; }
   border-radius: 50%;
   box-shadow: 0 0 0 1px rgb(126 224 214 / 0.18);
   overflow: hidden;
+  will-change: transform;
 }
 
 .radar-core {
@@ -926,6 +928,7 @@ img { max-width: 100%; outline: none; }
   mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
   -webkit-mask: radial-gradient(farthest-side, transparent 58%, #000 59%);
   animation: spin 1.8s linear infinite;
+  will-change: transform;
 }
 
 .radar-dots {
@@ -961,6 +964,7 @@ img { max-width: 100%; outline: none; }
   background: rgb(126 224 214 / 0.85);
   box-shadow: 0 0 12px var(--color-accent);
   animation: scan-y 1.6s cubic-bezier(0.22, 1, 0.36, 1) infinite;
+  will-change: top, opacity;
 }
 
 .scan-title {
@@ -971,6 +975,7 @@ img { max-width: 100%; outline: none; }
   letter-spacing: 0.18em;
   text-transform: uppercase;
   color: var(--color-accent);
+  min-height: 1.5em;
 }
 .scan-title .blink-cursor {
   display: inline-block;
