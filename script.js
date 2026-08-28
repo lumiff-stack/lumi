@@ -467,4 +467,234 @@ function renderScan(step) {
             <span class="radar-dot"></span>
             <span class="radar-dot"></span>
             <span class="radar-dot"></span>
-            <span class="radar-d
+            <span class="radar-dot"></span>
+            <span class="radar-dot"></span>
+          </span>
+        </div>
+        <p class="scan-title">${title}<span class="blink-cursor"></span></p>
+        <p class="scan-copy">This takes about 10 seconds.</p>
+        <div class="scan-meter"><span class="scan-meter-fill" style="width:${(step / SCAN_TITLES.length) * 100}%"></span></div>
+      </div>
+      <ol class="scan-steps" aria-live="polite" aria-atomic="true">
+        ${SCAN_TITLES.map((label, i) => {
+          const cls = step === i + 1 ? "is-on" : step > i + 1 ? "is-done" : "";
+          return `<li class="scan-step ${cls}"><span class="scan-dot"></span>${label}</li>`;
+        }).join("")}
+      </ol>
+    </div>
+  `;
+}
+
+function renderResult() {
+  const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
+  const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `
+    <div class="modal-panel is-active">
+      <div class="result">
+        <p class="result-kicker">Compatible</p>
+        <h2 class="result-title">Your phone is checked and ready</h2>
+        <p class="result-note">Your eSIM installation is just one tap away. Continue to enter your details and pay.</p>
+        <div class="fact-list">
+          <div class="fact"><span>Package</span><strong>${formatPkr(pkg.pricePkr)} · ${formatData(pkg.dataGb)}</strong></div>
+          <div class="fact"><span>Network</span><strong>${net.name}</strong></div>
+          <div class="fact"><span>Device</span><strong>${deviceInfo.os}</strong></div>
+        </div>
+        <button type="button" class="pkg-cta" id="continue-to-checkout">Continue to Checkout</button>
+      </div>
+    </div>
+  `;
+  document.getElementById("continue-to-checkout").addEventListener("click", showCheckout);
+}
+
+function showCheckout() {
+  const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
+  const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
+  const body = document.getElementById("modal-body");
+  const payReady = payUrl !== null;
+  body.innerHTML = `
+    <div class="modal-panel is-active">
+      <div class="checkout-summary">
+        <div>
+          <span class="pkg-name">${pkg.name}</span>
+          <div class="network-badge">${netMark(net.id)} ${net.name}</div>
+        </div>
+        <span class="pkg-price">${formatPkr(pkg.pricePkr)}</span>
+      </div>
+      <form class="checkout-form" id="checkout-form" novalidate>
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+        <div class="input-group">
+          <label for="whatsapp">WhatsApp Number</label>
+          <div class="prefix">
+            <span>+92</span>
+            <input type="tel" id="whatsapp" placeholder="3XX 1234567" inputmode="numeric" required />
+          </div>
+        </div>
+        <div class="easypaisa-option">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="20" fill="#00A854"/>
+            <path d="M50 30 L70 70 H30 L50 30Z" fill="#fff" opacity="0.9"/>
+            <circle cx="50" cy="50" r="12" fill="#fff"/>
+          </svg>
+          <span class="label">Easypaisa</span>
+          <span class="badge">Recommended</span>
+        </div>
+        <div class="checkout-actions">
+          <button type="button" class="pkg-cta pkg-cta--buy" id="pay-now" ${!payReady ? 'disabled' : ''}>
+            ${payReady ? 'Pay via Easypaisa' : 'Preparing payment link...'}
+          </button>
+          ${!payReady ? '<p style="color:var(--color-muted); font-size:0.75rem; text-align:center;">Please wait while we set up your payment.</p>' : ''}
+        </div>
+      </form>
+    </div>
+  `;
+
+  if (!payReady) {
+    payOrder.then(() => {
+      const btn = document.getElementById("pay-now");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Pay via Easypaisa";
+        const note = btn.parentElement.querySelector('p');
+        if (note) note.remove();
+      }
+    }).catch(() => {});
+  }
+
+  document.getElementById("pay-now").addEventListener("click", handlePay);
+}
+
+function handlePay() {
+  const btn = document.getElementById("pay-now");
+  if (btn.disabled) return;
+
+  // Simple visual validation
+  const email = document.getElementById("email");
+  const whatsapp = document.getElementById("whatsapp");
+  let valid = true;
+  if (!email.value || !email.value.includes("@")) {
+    email.style.borderColor = "#ff8fa0";
+    valid = false;
+  } else {
+    email.style.borderColor = "";
+  }
+  const phoneClean = whatsapp.value.replace(/\s/g, '');
+  if (!phoneClean || phoneClean.length < 10 || !phoneClean.startsWith('3')) {
+    whatsapp.style.borderColor = "#ff8fa0";
+    valid = false;
+  } else {
+    whatsapp.style.borderColor = "";
+  }
+  if (!valid) return;
+
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+
+  setTimeout(() => {
+    if (payUrl) {
+      window.location.assign(payUrl);
+    } else {
+      createPayOrder(PACKAGES.find(p => p.id === activeRequest.packageId))
+        .then(link => { window.location.assign(link); })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = "Pay via Easypaisa";
+          alert("Could not open payment. Please try again.");
+        });
+    }
+  }, 800);
+}
+
+/* ——— Events ——— */
+document.addEventListener("DOMContentLoaded", () => {
+  paintPackages();
+
+  const hash = (location.hash || "#home").slice(1);
+  showView(["home", "install", "about"].includes(hash) ? hash : "home");
+
+  updateAudioIcon();
+
+  document.body.addEventListener("pointerdown", (e) => {
+    unlockAudio();
+    if (e.target.closest("button, a, .tab, .pkg-cta")) playTap();
+  });
+  document.addEventListener("visibilitychange", resumeAudio);
+  window.addEventListener("focus", resumeAudio);
+
+  document.querySelectorAll("[data-view]").forEach((el) => {
+    el.addEventListener("click", (e) => {
+      e.preventDefault();
+      showView(el.dataset.view);
+    });
+  });
+
+  document.getElementById("audio-toggle").addEventListener("click", () => {
+    musicOn = !musicOn;
+    if (musicGain) musicGain.gain.value = musicOn ? 0.11 : 0;
+    if (musicOn) {
+      unlockAudio();
+      stopMusic();
+      startMusic();
+    } else stopMusic();
+    document.getElementById("audio-toggle").setAttribute("aria-label", musicOn ? "Mute music" : "Play music");
+    updateAudioIcon();
+  });
+
+  document.body.addEventListener("click", (e) => {
+    const netBtn = e.target.closest("[data-net]");
+    if (netBtn) {
+      const pkgId = netBtn.dataset.pkg;
+      const netId = netBtn.dataset.net;
+      cardState[pkgId] = netId;
+      document.querySelectorAll(`.pkg[data-pkg="${pkgId}"]`).forEach(card => {
+        card.dataset.network = netId;
+        const group = card.querySelector(".network-pills");
+        if (group) {
+          const idx = NETWORKS.findIndex(n => n.id === netId);
+          const thumb = group.querySelector(".network-pills__thumb");
+          if (thumb) thumb.style.transform = `translateX(${idx * 100}%)`;
+          group.querySelectorAll("button").forEach(b => {
+            const on = b.dataset.net === netId;
+            b.classList.toggle("is-on", on);
+            b.setAttribute("aria-checked", on);
+          });
+        }
+      });
+      return;
+    }
+
+    const getBtn = e.target.closest("[data-get]");
+    if (getBtn) openModal(getBtn.dataset.get);
+
+    if (e.target.id === "modal-close" || e.target.id === "modal-overlay") {
+      closeModal();
+    }
+  });
+
+  document.addEventListener("keydown", (e) => {
+    if (e.key === "Escape") closeModal();
+    // focus trap logic
+    if (!document.getElementById("modal").classList.contains("hidden")) {
+      const focusable = focusableElements.filter(el => el.offsetParent !== null);
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (e.key === "Tab") {
+        if (e.shiftKey) {
+          if (document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          }
+        } else {
+          if (document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
+        }
+      }
+    }
+  });
+});
