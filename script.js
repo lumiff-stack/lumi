@@ -66,6 +66,14 @@ const PACKAGES = [
   },
 ];
 
+const SCAN_TITLES = [
+  "Detecting device",
+  "Analyzing network bands",
+  "Handshaking with tower",
+  "Preparing eSIM profile",
+  "Finalizing compatibility",
+];
+
 function formatPkr(n) {
   return "Rs. " + n.toLocaleString("en-US");
 }
@@ -80,13 +88,11 @@ function formatValidity(days) {
   return days + " days";
 }
 
-// State: network per package
 const cardState = {};
 PACKAGES.forEach((p) => {
   cardState[p.id] = DEFAULT_NETWORK;
 });
 
-// Network icons (more authentic)
 function netMark(id) {
   if (id === "zong") {
     return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#EC008C"/><path d="M6.4 6.6h11.2L8.6 17.4h9.2" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
@@ -95,7 +101,6 @@ function netMark(id) {
     return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#00A9E0" d="M12 2.1c-4.7 0-7.6 3.7-7.6 8.1 0 5.4 3.7 9.4 7.3 9.4 1.2 0 2-.3 2-.3l2.9 2.4c.3.25.8 0 .75-.4l-.35-2.7c2.5-1.5 4.1-4.4 4.1-8.4 0-4.4-2.9-8.1-7.6-8.1Zm0 12.7c-2.5 0-4.3-2.2-4.3-5.1S9.5 4.6 12 4.6s4.3 2.2 4.3 5.1-1.8 5.1-4.3 5.1Z"/></svg>`;
   }
   return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#E31B23"/><path d="M13.4 4.6h3.1v10.4c0 3.4-2 5.4-5.6 5.4-2.9 0-5-1.5-5.6-3.8l2.7-.9c.35 1.3 1.35 2.15 2.9 2.15 1.8 0 2.7-1 2.7-3V4.6Z" fill="#fff"/></svg>`;
-  }
 }
 
 function pills(pkgId) {
@@ -115,35 +120,37 @@ function pills(pkgId) {
 
 function cardHTML(pkg, first) {
   const net = cardState[pkg.id];
-  const extra =
-    pkg.kind === "pulse"
-      ? `<span class="pkg-badge">${pkg.kicker}</span>
-         <div class="pkg-data-xl"><em>${pkg.dataGb}</em><span>GB · ${formatValidity(pkg.validityDays)}</span></div>
-         <h3 class="pkg-name">${pkg.name}</h3>
-         <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
-         <p class="pkg-meta">${pkg.blurb}</p>`
-      : pkg.kind === "drift"
-        ? `<p class="pkg-kicker">${pkg.kicker}</p>
-           <h3 class="pkg-name">${pkg.name}</h3>
-           <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
-           <div class="pkg-stats">
-             <div class="pkg-stat"><span>Data</span><strong>${formatData(pkg.dataGb)}</strong></div>
-             <div class="pkg-stat"><span>Valid</span><strong>${formatValidity(pkg.validityDays)}</strong></div>
-           </div>
-           <ul class="pkg-features">${pkg.features.map((f) => `<li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${f}</li>`).join("")}</ul>`
-        : pkg.kind === "aether"
-          ? `<p class="pkg-kicker">${pkg.kicker}</p>
+  let extra = "";
+  if (pkg.kind === "pulse") {
+    extra = `<span class="pkg-badge">${pkg.kicker}</span>
+             <div class="pkg-data-xl"><em>${pkg.dataGb}</em><span>GB · ${formatValidity(pkg.validityDays)}</span></div>
+             <h3 class="pkg-name">${pkg.name}</h3>
+             <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
+             <p class="pkg-meta">${pkg.blurb}</p>`;
+  } else if (pkg.kind === "drift") {
+    extra = `<p class="pkg-kicker">${pkg.kicker}</p>
+             <h3 class="pkg-name">${pkg.name}</h3>
+             <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
+             <div class="pkg-stats">
+               <div class="pkg-stat"><span>Data</span><strong>${formatData(pkg.dataGb)}</strong></div>
+               <div class="pkg-stat"><span>Valid</span><strong>${formatValidity(pkg.validityDays)}</strong></div>
+             </div>
+             <ul class="pkg-features">${pkg.features.map((f) => `<li><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg> ${f}</li>`).join("")}</ul>`;
+  } else if (pkg.kind === "aether") {
+    extra = `<p class="pkg-kicker">${pkg.kicker}</p>
              <h3 class="pkg-name">${pkg.name}</h3>
              <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
              <p class="pkg-meta">${pkg.blurb}</p>
              <div class="pkg-glass">
                <div class="pkg-glass-row"><span>Data</span><strong>${formatData(pkg.dataGb)}</strong></div>
                <div class="pkg-glass-row"><span>Validity</span><strong>${formatValidity(pkg.validityDays)}</strong></div>
-             </div>`
-          : `<p class="pkg-kicker">${pkg.kicker}</p>
+             </div>`;
+  } else {
+    extra = `<p class="pkg-kicker">${pkg.kicker}</p>
              <h3 class="pkg-name">${pkg.name}</h3>
              <p class="pkg-price">${formatPkr(pkg.pricePkr)}</p>
              <p class="pkg-meta">${formatData(pkg.dataGb)} · ${formatValidity(pkg.validityDays)}</p>`;
+  }
 
   return `
     <article class="pkg pkg--${pkg.kind}" ${first ? 'id="first-package"' : ""} data-pkg="${pkg.id}" data-network="${net}">
@@ -173,7 +180,6 @@ function paintPackages() {
   if (install) install.innerHTML = sectionHTML(true);
 }
 
-/* ——— Views ——— */
 function showView(name) {
   document.querySelectorAll(".view").forEach((el) => el.classList.toggle("is-on", el.id === "view-" + name));
   document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("is-active", el.dataset.view === name));
@@ -188,7 +194,7 @@ let master = null;
 let musicGain = null;
 let musicTimer = null;
 let unlocked = false;
-let musicOn = false; // start muted
+let musicOn = false;
 
 function audio() {
   const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -204,6 +210,7 @@ function audio() {
   }
   return audioCtx;
 }
+
 function env(dur, peak) {
   const c = audio();
   if (!c || !master) return null;
@@ -214,6 +221,7 @@ function env(dur, peak) {
   g.connect(master);
   return g;
 }
+
 function playTap() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -227,6 +235,7 @@ function playTap() {
   o.start();
   o.stop(c.currentTime + 0.08);
 }
+
 function playTick() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -239,6 +248,7 @@ function playTick() {
   o.start();
   o.stop(c.currentTime + 0.12);
 }
+
 function playSuccess() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -254,6 +264,7 @@ function playSuccess() {
     o.stop(t + 0.28);
   });
 }
+
 function startMusic() {
   const c = audio();
   if (!c || !musicGain || musicTimer) return;
@@ -275,21 +286,23 @@ function startMusic() {
   beat();
   musicTimer = window.setInterval(beat, 2400);
 }
+
 function stopMusic() {
   if (musicTimer) {
     clearInterval(musicTimer);
     musicTimer = null;
   }
 }
+
 function unlockAudio() {
   const c = audio();
   if (!c) return;
   if (c.state === "suspended") c.resume();
   unlocked = true;
   if (musicOn && !musicTimer) startMusic();
-  // swap icon if musicOn becomes true
   updateAudioIcon();
 }
+
 function resumeAudio() {
   if (document.hidden) return;
   const c = audio();
@@ -299,9 +312,13 @@ function resumeAudio() {
     stopMusic();
     startMusic();
   };
-  if (c.state === "suspended") c.resume().then(kick).catch(() => {});
-  else kick();
+  if (c.state === "suspended") {
+    c.resume().then(kick).catch(() => {});
+  } else {
+    kick();
+  }
 }
+
 function updateAudioIcon() {
   const onIco = document.querySelector(".ico-vol-on");
   const offIco = document.querySelector(".ico-vol-off");
@@ -319,25 +336,10 @@ function detectDevice() {
   else if (/Android/i.test(ua)) os = "Android";
   else if (/Mac/i.test(ua)) os = "macOS";
   else if (/Win/i.test(ua)) os = "Windows";
-  const esim = /iPhone|iPad|Android/i.test(ua);
-  return { os, esim, ua };
+  return { os, esim: /iPhone|iPad|Android/i.test(ua), ua };
 }
 
-/* ——— Modal / checkout seam ——— */
-const SCAN_TITLES = [
-  "Detecting device",
-  "Analyzing network bands",
-  "Handshaking with tower",
-  "Preparing eSIM profile",
-  "Finalizing compatibility",
-];
-let scanTimers = [];
-let activeRequest = null;
-let deviceInfo = null;
-let payUrl = null;
-let payOrder = null;
-let modalTriggerElement = null; // for focus return
-
+/* ——— Modal ——— */
 const PAY_API = "https://icy-breeze-8412.babysomething.workers.dev/";
 const PACKAGE_PAY_ID = {
   "lumi-500": 1,
@@ -345,6 +347,14 @@ const PACKAGE_PAY_ID = {
   "lumi-2000": 3,
   "lumi-5000": 4,
 };
+
+let scanTimers = [];
+let activeRequest = null;
+let deviceInfo = null;
+let payUrl = null;
+let payOrder = null;
+let modalTriggerElement = null;
+let focusableElements = [];
 
 async function createPayOrder(pkg) {
   const id = PACKAGE_PAY_ID[pkg.id];
@@ -356,35 +366,11 @@ async function createPayOrder(pkg) {
   return link;
 }
 
-let focusableElements = [];
-function trapFocus(e) {
-  if (!document.getElementById("modal").classList.contains("hidden")) {
-    const focusable = focusableElements.filter(el => el.offsetParent !== null);
-    if (focusable.length === 0) return;
-    const first = focusable[0];
-    const last = focusable[focusable.length - 1];
-    if (e.key === "Tab") {
-      if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
-      } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
-      }
-    }
-  }
-}
-
 function closeModal() {
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
   document.getElementById("modal").classList.add("hidden");
   document.getElementById("modal-overlay").classList.add("hidden");
-  // restore focus
   if (modalTriggerElement) {
     modalTriggerElement.focus();
     modalTriggerElement = null;
@@ -392,7 +378,6 @@ function closeModal() {
   activeRequest = null;
   payUrl = null;
   payOrder = null;
-  // remove body lock
   document.body.style.overflow = "";
 }
 
@@ -403,7 +388,6 @@ function openModal(pkgId) {
   deviceInfo = detectDevice();
   modalTriggerElement = document.activeElement;
 
-  // Pre-fetch payment URL immediately
   payUrl = null;
   payOrder = createPayOrder(pkg)
     .then((link) => {
@@ -417,29 +401,25 @@ function openModal(pkgId) {
 
   document.getElementById("modal-overlay").classList.remove("hidden");
   document.getElementById("modal").classList.remove("hidden");
-
-  // Lock background scroll
   document.body.style.overflow = "hidden";
 
-  // Focus trap setup
   setTimeout(() => {
     const modal = document.getElementById("modal");
     focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
     if (focusableElements.length) focusableElements[0].focus();
   }, 50);
 
-  // Start scan
   renderScan(0);
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
   const totalSteps = SCAN_TITLES.length;
-  const stepDuration = 2000; // 2 sec per step => 10 sec total
+  const stepDuration = 2000;
+
   for (let i = 0; i < totalSteps; i++) {
     scanTimers.push(
       setTimeout(() => {
         playTick();
         renderScan(i + 1);
-        // update meter to discrete jumps
         const fill = document.querySelector(".scan-meter-fill");
         if (fill) {
           const pct = ((i + 1) / totalSteps) * 100;
@@ -448,20 +428,17 @@ function openModal(pkgId) {
       }, i * stepDuration)
     );
   }
-  // After all steps, show result
+
   scanTimers.push(
     setTimeout(() => {
       playSuccess();
-      // Show success payoff (quick checkmark burst)
       showSuccessPayoff();
     }, totalSteps * stepDuration)
   );
 }
 
 function showSuccessPayoff() {
-  // Animate a checkmark burst before showing result
   const body = document.getElementById("modal-body");
-  // We'll replace the scan panel with a quick animation
   body.innerHTML = `
     <div class="modal-panel is-active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 0;">
       <div style="width:80px; height:80px; border-radius:50%; background:var(--color-accent); display:grid; place-items:center; animation: scale-in 0.4s var(--ease-out) both; box-shadow:0 0 40px var(--color-accent);">
@@ -473,14 +450,10 @@ function showSuccessPayoff() {
       <p style="margin:0; color:var(--color-muted); font-size:0.875rem;">Your phone is ready for eSIM installation.</p>
     </div>
   `;
-  // After 1.2s, show result panel
-  setTimeout(() => {
-    renderResult();
-  }, 1200);
+  setTimeout(() => renderResult(), 1200);
 }
 
 function renderScan(step) {
-  // step = number of completed steps (0 = initial)
   const body = document.getElementById("modal-body");
   const title = step < SCAN_TITLES.length ? SCAN_TITLES[step] : SCAN_TITLES[SCAN_TITLES.length - 1];
   body.innerHTML = `
@@ -494,228 +467,4 @@ function renderScan(step) {
             <span class="radar-dot"></span>
             <span class="radar-dot"></span>
             <span class="radar-dot"></span>
-            <span class="radar-dot"></span>
-            <span class="radar-dot"></span>
-          </span>
-        </div>
-        <p class="scan-title">${title}<span class="blink-cursor"></span></p>
-        <p class="scan-copy">This takes about 10 seconds.</p>
-        <div class="scan-meter"><span class="scan-meter-fill" style="width:${(step / SCAN_TITLES.length) * 100}%"></span></div>
-      </div>
-      <ol class="scan-steps" aria-live="polite" aria-atomic="true">
-        ${SCAN_TITLES.map((label, i) => {
-          const cls = step === i + 1 ? "is-on" : step > i + 1 ? "is-done" : "";
-          return `<li class="scan-step ${cls}"><span class="scan-dot"></span>${label}</li>`;
-        }).join("")}
-      </ol>
-    </div>
-  `;
-}
-
-function renderResult() {
-  const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
-  const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
-  const body = document.getElementById("modal-body");
-  body.innerHTML = `
-    <div class="modal-panel is-active">
-      <div class="result">
-        <p class="result-kicker">Compatible</p>
-        <h2 class="result-title">Your phone is checked and ready</h2>
-        <p class="result-note">Your eSIM installation is just one tap away. Continue to enter your details and pay.</p>
-        <div class="fact-list">
-          <div class="fact"><span>Package</span><strong>${formatPkr(pkg.pricePkr)} · ${formatData(pkg.dataGb)}</strong></div>
-          <div class="fact"><span>Network</span><strong>${net.name}</strong></div>
-          <div class="fact"><span>Device</span><strong>${deviceInfo.os}</strong></div>
-        </div>
-        <button type="button" class="pkg-cta" id="continue-to-checkout">Continue to Checkout</button>
-      </div>
-    </div>
-  `;
-  // Attach event to the new button
-  document.getElementById("continue-to-checkout").addEventListener("click", showCheckout);
-}
-
-function showCheckout() {
-  const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
-  const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
-  const body = document.getElementById("modal-body");
-  // Check if payment URL is ready; if not, show a loading state on the button
-  const payReady = payUrl !== null;
-  body.innerHTML = `
-    <div class="modal-panel is-active">
-      <div class="checkout-summary">
-        <div>
-          <span class="pkg-name">${pkg.name}</span>
-          <div class="network-badge">${netMark(net.id)} ${net.name}</div>
-        </div>
-        <span class="pkg-price">${formatPkr(pkg.pricePkr)}</span>
-      </div>
-      <form class="checkout-form" id="checkout-form" novalidate>
-        <div class="input-group">
-          <label for="email">Email Address</label>
-          <input type="email" id="email" placeholder="you@example.com" required />
-        </div>
-        <div class="input-group">
-          <label for="whatsapp">WhatsApp Number</label>
-          <div class="prefix">
-            <span>+92</span>
-            <input type="tel" id="whatsapp" placeholder="3XX 1234567" inputmode="numeric" required />
-          </div>
-        </div>
-        <div class="easypaisa-option">
-          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="100" height="100" rx="20" fill="#00A854"/>
-            <path d="M50 30 L70 70 H30 L50 30Z" fill="#fff" opacity="0.9"/>
-            <circle cx="50" cy="50" r="12" fill="#fff"/>
-          </svg>
-          <span class="label">Easypaisa</span>
-          <span class="badge">Recommended</span>
-        </div>
-        <div class="checkout-actions">
-          <button type="button" class="pkg-cta pkg-cta--buy" id="pay-now" ${!payReady ? 'disabled' : ''}>
-            ${payReady ? 'Pay via Easypaisa' : 'Preparing payment link...'}
-          </button>
-          ${!payReady ? '<p style="color:var(--color-muted); font-size:0.75rem; text-align:center;">Please wait while we set up your payment.</p>' : ''}
-        </div>
-      </form>
-    </div>
-  `;
-
-  // If not ready, listen for the promise to resolve
-  if (!payReady) {
-    payOrder.then(() => {
-      const btn = document.getElementById("pay-now");
-      if (btn) {
-        btn.disabled = false;
-        btn.textContent = "Pay via Easypaisa";
-        const note = btn.parentElement.querySelector('p');
-        if (note) note.remove();
-      }
-    }).catch(() => {});
-  }
-
-  // Attach pay event
-  document.getElementById("pay-now").addEventListener("click", handlePay);
-}
-
-function handlePay() {
-  const btn = document.getElementById("pay-now");
-  if (btn.disabled) return;
-
-  // Simple visual validation
-  const email = document.getElementById("email");
-  const whatsapp = document.getElementById("whatsapp");
-  let valid = true;
-  if (!email.value || !email.value.includes("@")) {
-    email.style.borderColor = "#ff8fa0";
-    valid = false;
-  } else {
-    email.style.borderColor = "";
-  }
-  const phoneClean = whatsapp.value.replace(/\s/g, '');
-  if (!phoneClean || phoneClean.length < 10 || !phoneClean.startsWith('3')) {
-    whatsapp.style.borderColor = "#ff8fa0";
-    valid = false;
-  } else {
-    whatsapp.style.borderColor = "";
-  }
-  if (!valid) {
-    // show a quick error
-    return;
-  }
-
-  // Fake processing delay
-  btn.disabled = true;
-  btn.textContent = "Processing...";
-  setTimeout(() => {
-    if (payUrl) {
-      window.location.assign(payUrl);
-    } else {
-      // fallback: try to fetch now
-      createPayOrder(PACKAGES.find(p => p.id === activeRequest.packageId))
-        .then(link => { window.location.assign(link); })
-        .catch(() => {
-          btn.disabled = false;
-          btn.textContent = "Pay via Easypaisa";
-          alert("Could not open payment. Please try again.");
-        });
-    }
-  }, 800);
-}
-
-/* ——— Events ——— */
-document.addEventListener("DOMContentLoaded", () => {
-  paintPackages();
-
-  const hash = (location.hash || "#home").slice(1);
-  showView(["home", "install", "about"].includes(hash) ? hash : "home");
-
-  // Audio: start muted
-  updateAudioIcon();
-
-  document.body.addEventListener("pointerdown", (e) => {
-    unlockAudio();
-    if (e.target.closest("button, a, .tab, .pkg-cta")) playTap();
-  });
-  document.addEventListener("visibilitychange", resumeAudio);
-  window.addEventListener("focus", resumeAudio);
-
-  // View switching
-  document.querySelectorAll("[data-view]").forEach((el) => {
-    el.addEventListener("click", (e) => {
-      e.preventDefault();
-      showView(el.dataset.view);
-    });
-  });
-
-  // Audio toggle
-  document.getElementById("audio-toggle").addEventListener("click", () => {
-    musicOn = !musicOn;
-    if (musicGain) musicGain.gain.value = musicOn ? 0.11 : 0;
-    if (musicOn) {
-      unlockAudio();
-      stopMusic();
-      startMusic();
-    } else stopMusic();
-    document.getElementById("audio-toggle").setAttribute("aria-label", musicOn ? "Mute music" : "Play music");
-    updateAudioIcon();
-  });
-
-  // Network pill clicks (sync across all copies)
-  document.body.addEventListener("click", (e) => {
-    const netBtn = e.target.closest("[data-net]");
-    if (netBtn) {
-      const pkgId = netBtn.dataset.pkg;
-      const netId = netBtn.dataset.net;
-      cardState[pkgId] = netId;
-      // Update all cards with this pkgId
-      document.querySelectorAll(`.pkg[data-pkg="${pkgId}"]`).forEach(card => {
-        card.dataset.network = netId;
-        const group = card.querySelector(".network-pills");
-        if (group) {
-          const idx = NETWORKS.findIndex(n => n.id === netId);
-          const thumb = group.querySelector(".network-pills__thumb");
-          if (thumb) thumb.style.transform = `translateX(${idx * 100}%)`;
-          group.querySelectorAll("button").forEach(b => {
-            const on = b.dataset.net === netId;
-            b.classList.toggle("is-on", on);
-            b.setAttribute("aria-checked", on);
-          });
-        }
-      });
-      return;
-    }
-
-    // Get eSIM button
-    const getBtn = e.target.closest("[data-get]");
-    if (getBtn) openModal(getBtn.dataset.get);
-
-    // Modal close triggers
-    if (e.target.id === "modal-close" || e.target.id === "modal-overlay") {
-      closeModal();
-    }
-  });
-
-  // Keyboard focus trap
-  document.addEventListener("keydown", trapFocus);
-});
+            <span class="radar-d
