@@ -676,7 +676,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") closeModal();
-    // focus trap logic
+    // Focus trap logic
     if (!document.getElementById("modal").classList.contains("hidden")) {
       const focusable = focusableElements.filter(el => el.offsetParent !== null);
       if (focusable.length === 0) return;
