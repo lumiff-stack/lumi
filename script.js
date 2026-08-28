@@ -1,8 +1,8 @@
 /* Lumi — static store
    Edit PACKAGES to change prices, data, or copy.
-   Future: wire beginCheckout() to a payment gateway.
-   Future: wire provisionEsim() after payment. No QR codes. */
-
+   Payment URL is pre‑fetched when modal opens.
+   Checkout form is visual only – no data is sent.
+*/
 const NETWORKS = [
   { id: "zong", name: "Zong" },
   { id: "telenor", name: "Telenor" },
@@ -21,7 +21,7 @@ const PACKAGES = [
     blurb: "A few days of data, installed in minutes.",
     features: ["Instant eSIM after payment", "Nationwide coverage", "No QR code"],
     kind: "spark",
-    cta: "Install eSIM",
+    cta: "Get eSIM",
   },
   {
     id: "lumi-1000",
@@ -33,7 +33,7 @@ const PACKAGES = [
     blurb: "The plan people actually buy.",
     features: ["Instant eSIM after payment", "Nationwide coverage", "No QR code"],
     kind: "pulse",
-    cta: "Install eSIM",
+    cta: "Get eSIM",
   },
   {
     id: "lumi-2000",
@@ -45,7 +45,7 @@ const PACKAGES = [
     blurb: "A month of data on the network you choose.",
     features: ["Instant eSIM after payment", "Zong, Telenor or Jazz", "No shop visit"],
     kind: "drift",
-    cta: "Install eSIM",
+    cta: "Get eSIM",
   },
   {
     id: "lumi-5000",
@@ -62,7 +62,7 @@ const PACKAGES = [
       "Priority provisioning",
     ],
     kind: "aether",
-    cta: "Install eSIM",
+    cta: "Get eSIM",
   },
 ];
 
@@ -80,11 +80,13 @@ function formatValidity(days) {
   return days + " days";
 }
 
+// State: network per package
 const cardState = {};
 PACKAGES.forEach((p) => {
   cardState[p.id] = DEFAULT_NETWORK;
 });
 
+// Network icons (more authentic)
 function netMark(id) {
   if (id === "zong") {
     return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#EC008C"/><path d="M6.4 6.6h11.2L8.6 17.4h9.2" stroke="#fff" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>`;
@@ -93,6 +95,7 @@ function netMark(id) {
     return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><path fill="#00A9E0" d="M12 2.1c-4.7 0-7.6 3.7-7.6 8.1 0 5.4 3.7 9.4 7.3 9.4 1.2 0 2-.3 2-.3l2.9 2.4c.3.25.8 0 .75-.4l-.35-2.7c2.5-1.5 4.1-4.4 4.1-8.4 0-4.4-2.9-8.1-7.6-8.1Zm0 12.7c-2.5 0-4.3-2.2-4.3-5.1S9.5 4.6 12 4.6s4.3 2.2 4.3 5.1-1.8 5.1-4.3 5.1Z"/></svg>`;
   }
   return `<svg class="net-mark" viewBox="0 0 24 24" aria-hidden="true"><rect width="24" height="24" rx="6" fill="#E31B23"/><path d="M13.4 4.6h3.1v10.4c0 3.4-2 5.4-5.6 5.4-2.9 0-5-1.5-5.6-3.8l2.7-.9c.35 1.3 1.35 2.15 2.9 2.15 1.8 0 2.7-1 2.7-3V4.6Z" fill="#fff"/></svg>`;
+  }
 }
 
 function pills(pkgId) {
@@ -146,7 +149,7 @@ function cardHTML(pkg, first) {
     <article class="pkg pkg--${pkg.kind}" ${first ? 'id="first-package"' : ""} data-pkg="${pkg.id}" data-network="${net}">
       ${extra}
       ${pills(pkg.id)}
-      <button type="button" class="pkg-cta ${pkg.kind === "pulse" ? "pkg-cta--buy" : ""}" data-install="${pkg.id}">
+      <button type="button" class="pkg-cta ${pkg.kind === "pulse" ? "pkg-cta--buy" : ""}" data-get="${pkg.id}">
         ${pkg.cta}
       </button>
     </article>`;
@@ -166,7 +169,7 @@ function sectionHTML(firstId) {
 function paintPackages() {
   const home = document.getElementById("packages-home");
   const install = document.getElementById("packages-install");
-  if (home) home.innerHTML = sectionHTML(true);
+  if (home) home.innerHTML = sectionHTML(false);
   if (install) install.innerHTML = sectionHTML(true);
 }
 
@@ -174,6 +177,7 @@ function paintPackages() {
 function showView(name) {
   document.querySelectorAll(".view").forEach((el) => el.classList.toggle("is-on", el.id === "view-" + name));
   document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("is-active", el.dataset.view === name));
+  document.querySelectorAll(".nav-link").forEach((el) => el.classList.toggle("is-active", el.dataset.view === name));
   document.getElementById("stage").scrollTop = 0;
   history.replaceState(null, "", "#" + name);
 }
@@ -184,7 +188,7 @@ let master = null;
 let musicGain = null;
 let musicTimer = null;
 let unlocked = false;
-let musicOn = true;
+let musicOn = false; // start muted
 
 function audio() {
   const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -195,7 +199,7 @@ function audio() {
     master.gain.value = 0.7;
     master.connect(audioCtx.destination);
     musicGain = audioCtx.createGain();
-    musicGain.gain.value = musicOn ? 0.11 : 0;
+    musicGain.gain.value = 0;
     musicGain.connect(master);
   }
   return audioCtx;
@@ -283,6 +287,8 @@ function unlockAudio() {
   if (c.state === "suspended") c.resume();
   unlocked = true;
   if (musicOn && !musicTimer) startMusic();
+  // swap icon if musicOn becomes true
+  updateAudioIcon();
 }
 function resumeAudio() {
   if (document.hidden) return;
@@ -295,6 +301,14 @@ function resumeAudio() {
   };
   if (c.state === "suspended") c.resume().then(kick).catch(() => {});
   else kick();
+}
+function updateAudioIcon() {
+  const onIco = document.querySelector(".ico-vol-on");
+  const offIco = document.querySelector(".ico-vol-off");
+  if (onIco && offIco) {
+    onIco.classList.toggle("hidden", !musicOn);
+    offIco.classList.toggle("hidden", musicOn);
+  }
 }
 
 /* ——— Device ——— */
@@ -310,18 +324,19 @@ function detectDevice() {
 }
 
 /* ——— Modal / checkout seam ——— */
-const SCAN = [
+const SCAN_TITLES = [
   "Detecting device",
-  "Checking operating system",
-  "Checking browser",
-  "Checking eSIM capability",
-  "Preparing installation",
+  "Analyzing network bands",
+  "Handshaking with tower",
+  "Preparing eSIM profile",
+  "Finalizing compatibility",
 ];
 let scanTimers = [];
 let activeRequest = null;
 let deviceInfo = null;
 let payUrl = null;
 let payOrder = null;
+let modalTriggerElement = null; // for focus return
 
 const PAY_API = "https://icy-breeze-8412.babysomething.workers.dev/";
 const PACKAGE_PAY_ID = {
@@ -341,14 +356,44 @@ async function createPayOrder(pkg) {
   return link;
 }
 
+let focusableElements = [];
+function trapFocus(e) {
+  if (!document.getElementById("modal").classList.contains("hidden")) {
+    const focusable = focusableElements.filter(el => el.offsetParent !== null);
+    if (focusable.length === 0) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.key === "Tab") {
+      if (e.shiftKey) {
+        if (document.activeElement === first) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else {
+        if (document.activeElement === last) {
+          e.preventDefault();
+          first.focus();
+        }
+      }
+    }
+  }
+}
+
 function closeModal() {
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
   document.getElementById("modal").classList.add("hidden");
   document.getElementById("modal-overlay").classList.add("hidden");
+  // restore focus
+  if (modalTriggerElement) {
+    modalTriggerElement.focus();
+    modalTriggerElement = null;
+  }
   activeRequest = null;
   payUrl = null;
   payOrder = null;
+  // remove body lock
+  document.body.style.overflow = "";
 }
 
 function openModal(pkgId) {
@@ -356,6 +401,9 @@ function openModal(pkgId) {
   if (!pkg) return;
   activeRequest = { packageId: pkgId, networkId: cardState[pkgId] };
   deviceInfo = detectDevice();
+  modalTriggerElement = document.activeElement;
+
+  // Pre-fetch payment URL immediately
   payUrl = null;
   payOrder = createPayOrder(pkg)
     .then((link) => {
@@ -366,68 +414,233 @@ function openModal(pkgId) {
       payUrl = null;
       throw new Error("fail");
     });
+
   document.getElementById("modal-overlay").classList.remove("hidden");
   document.getElementById("modal").classList.remove("hidden");
+
+  // Lock background scroll
+  document.body.style.overflow = "hidden";
+
+  // Focus trap setup
+  setTimeout(() => {
+    const modal = document.getElementById("modal");
+    focusableElements = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (focusableElements.length) focusableElements[0].focus();
+  }, 50);
+
+  // Start scan
   renderScan(0);
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
-  SCAN.forEach((_, i) => {
+  const totalSteps = SCAN_TITLES.length;
+  const stepDuration = 2000; // 2 sec per step => 10 sec total
+  for (let i = 0; i < totalSteps; i++) {
     scanTimers.push(
       setTimeout(() => {
         playTick();
         renderScan(i + 1);
-      }, i * 2000)
+        // update meter to discrete jumps
+        const fill = document.querySelector(".scan-meter-fill");
+        if (fill) {
+          const pct = ((i + 1) / totalSteps) * 100;
+          fill.style.width = pct + "%";
+        }
+      }, i * stepDuration)
     );
-  });
+  }
+  // After all steps, show result
   scanTimers.push(
     setTimeout(() => {
       playSuccess();
-      renderResult();
-    }, SCAN.length * 2000)
+      // Show success payoff (quick checkmark burst)
+      showSuccessPayoff();
+    }, totalSteps * stepDuration)
   );
 }
 
+function showSuccessPayoff() {
+  // Animate a checkmark burst before showing result
+  const body = document.getElementById("modal-body");
+  // We'll replace the scan panel with a quick animation
+  body.innerHTML = `
+    <div class="modal-panel is-active" style="display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px 0;">
+      <div style="width:80px; height:80px; border-radius:50%; background:var(--color-accent); display:grid; place-items:center; animation: scale-in 0.4s var(--ease-out) both; box-shadow:0 0 40px var(--color-accent);">
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#152048" stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 6 9 17l-5-5"/>
+        </svg>
+      </div>
+      <p style="margin:18px 0 6px; font-size:1.25rem; font-weight:700; color:var(--color-fg);">Device Compatible</p>
+      <p style="margin:0; color:var(--color-muted); font-size:0.875rem;">Your phone is ready for eSIM installation.</p>
+    </div>
+  `;
+  // After 1.2s, show result panel
+  setTimeout(() => {
+    renderResult();
+  }, 1200);
+}
+
 function renderScan(step) {
-  document.getElementById("modal-body").innerHTML = `
-    <div>
+  // step = number of completed steps (0 = initial)
+  const body = document.getElementById("modal-body");
+  const title = step < SCAN_TITLES.length ? SCAN_TITLES[step] : SCAN_TITLES[SCAN_TITLES.length - 1];
+  body.innerHTML = `
+    <div class="modal-panel is-active">
       <div class="scan-stage">
         <div class="radar" aria-hidden="true">
           <span class="radar-sweep"></span>
           <span class="radar-core"></span>
           <span class="radar-line"></span>
+          <span class="radar-dots">
+            <span class="radar-dot"></span>
+            <span class="radar-dot"></span>
+            <span class="radar-dot"></span>
+            <span class="radar-dot"></span>
+            <span class="radar-dot"></span>
+          </span>
         </div>
-        <p class="scan-title">Checking your phone</p>
+        <p class="scan-title">${title}<span class="blink-cursor"></span></p>
         <p class="scan-copy">This takes about 10 seconds.</p>
-        <div class="scan-meter"><span class="scan-meter-fill"></span></div>
+        <div class="scan-meter"><span class="scan-meter-fill" style="width:${(step / SCAN_TITLES.length) * 100}%"></span></div>
       </div>
-      <ol class="scan-steps">
-        ${SCAN.map((label, i) => {
+      <ol class="scan-steps" aria-live="polite" aria-atomic="true">
+        ${SCAN_TITLES.map((label, i) => {
           const cls = step === i + 1 ? "is-on" : step > i + 1 ? "is-done" : "";
           return `<li class="scan-step ${cls}"><span class="scan-dot"></span>${label}</li>`;
         }).join("")}
       </ol>
-    </div>`;
+    </div>
+  `;
 }
 
 function renderResult() {
   const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
   const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
-  document.getElementById("modal-body").innerHTML = `
-    <div class="result">
-      <p class="result-kicker">Compatible</p>
-      <h2 class="result-title">Your phone is checked and is compatible</h2>
-      <p class="result-note">Your eSIM installation is just one tap away. Make payment now and get your eSIM.</p>
-      <div class="fact-list">
-        <div class="fact"><span>Package</span><strong>${formatPkr(pkg.pricePkr)} · ${formatData(pkg.dataGb)}</strong></div>
-        <div class="fact"><span>Network</span><strong>${net.name}</strong></div>
-        <div class="fact"><span>Device</span><strong>${deviceInfo.os}</strong></div>
+  const body = document.getElementById("modal-body");
+  body.innerHTML = `
+    <div class="modal-panel is-active">
+      <div class="result">
+        <p class="result-kicker">Compatible</p>
+        <h2 class="result-title">Your phone is checked and ready</h2>
+        <p class="result-note">Your eSIM installation is just one tap away. Continue to enter your details and pay.</p>
+        <div class="fact-list">
+          <div class="fact"><span>Package</span><strong>${formatPkr(pkg.pricePkr)} · ${formatData(pkg.dataGb)}</strong></div>
+          <div class="fact"><span>Network</span><strong>${net.name}</strong></div>
+          <div class="fact"><span>Device</span><strong>${deviceInfo.os}</strong></div>
+        </div>
+        <button type="button" class="pkg-cta" id="continue-to-checkout">Continue to Checkout</button>
       </div>
-      <button type="button" class="pkg-cta pkg-cta--buy" id="pay-now">Make payment now</button>
-    </div>`;
+    </div>
+  `;
+  // Attach event to the new button
+  document.getElementById("continue-to-checkout").addEventListener("click", showCheckout);
 }
 
-function goToPayLink(link) {
-  window.location.assign(link);
+function showCheckout() {
+  const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
+  const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
+  const body = document.getElementById("modal-body");
+  // Check if payment URL is ready; if not, show a loading state on the button
+  const payReady = payUrl !== null;
+  body.innerHTML = `
+    <div class="modal-panel is-active">
+      <div class="checkout-summary">
+        <div>
+          <span class="pkg-name">${pkg.name}</span>
+          <div class="network-badge">${netMark(net.id)} ${net.name}</div>
+        </div>
+        <span class="pkg-price">${formatPkr(pkg.pricePkr)}</span>
+      </div>
+      <form class="checkout-form" id="checkout-form" novalidate>
+        <div class="input-group">
+          <label for="email">Email Address</label>
+          <input type="email" id="email" placeholder="you@example.com" required />
+        </div>
+        <div class="input-group">
+          <label for="whatsapp">WhatsApp Number</label>
+          <div class="prefix">
+            <span>+92</span>
+            <input type="tel" id="whatsapp" placeholder="3XX 1234567" inputmode="numeric" required />
+          </div>
+        </div>
+        <div class="easypaisa-option">
+          <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="100" height="100" rx="20" fill="#00A854"/>
+            <path d="M50 30 L70 70 H30 L50 30Z" fill="#fff" opacity="0.9"/>
+            <circle cx="50" cy="50" r="12" fill="#fff"/>
+          </svg>
+          <span class="label">Easypaisa</span>
+          <span class="badge">Recommended</span>
+        </div>
+        <div class="checkout-actions">
+          <button type="button" class="pkg-cta pkg-cta--buy" id="pay-now" ${!payReady ? 'disabled' : ''}>
+            ${payReady ? 'Pay via Easypaisa' : 'Preparing payment link...'}
+          </button>
+          ${!payReady ? '<p style="color:var(--color-muted); font-size:0.75rem; text-align:center;">Please wait while we set up your payment.</p>' : ''}
+        </div>
+      </form>
+    </div>
+  `;
+
+  // If not ready, listen for the promise to resolve
+  if (!payReady) {
+    payOrder.then(() => {
+      const btn = document.getElementById("pay-now");
+      if (btn) {
+        btn.disabled = false;
+        btn.textContent = "Pay via Easypaisa";
+        const note = btn.parentElement.querySelector('p');
+        if (note) note.remove();
+      }
+    }).catch(() => {});
+  }
+
+  // Attach pay event
+  document.getElementById("pay-now").addEventListener("click", handlePay);
+}
+
+function handlePay() {
+  const btn = document.getElementById("pay-now");
+  if (btn.disabled) return;
+
+  // Simple visual validation
+  const email = document.getElementById("email");
+  const whatsapp = document.getElementById("whatsapp");
+  let valid = true;
+  if (!email.value || !email.value.includes("@")) {
+    email.style.borderColor = "#ff8fa0";
+    valid = false;
+  } else {
+    email.style.borderColor = "";
+  }
+  const phoneClean = whatsapp.value.replace(/\s/g, '');
+  if (!phoneClean || phoneClean.length < 10 || !phoneClean.startsWith('3')) {
+    whatsapp.style.borderColor = "#ff8fa0";
+    valid = false;
+  } else {
+    whatsapp.style.borderColor = "";
+  }
+  if (!valid) {
+    // show a quick error
+    return;
+  }
+
+  // Fake processing delay
+  btn.disabled = true;
+  btn.textContent = "Processing...";
+  setTimeout(() => {
+    if (payUrl) {
+      window.location.assign(payUrl);
+    } else {
+      // fallback: try to fetch now
+      createPayOrder(PACKAGES.find(p => p.id === activeRequest.packageId))
+        .then(link => { window.location.assign(link); })
+        .catch(() => {
+          btn.disabled = false;
+          btn.textContent = "Pay via Easypaisa";
+          alert("Could not open payment. Please try again.");
+        });
+    }
+  }, 800);
 }
 
 /* ——— Events ——— */
@@ -437,6 +650,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const hash = (location.hash || "#home").slice(1);
   showView(["home", "install", "about"].includes(hash) ? hash : "home");
 
+  // Audio: start muted
+  updateAudioIcon();
+
   document.body.addEventListener("pointerdown", (e) => {
     unlockAudio();
     if (e.target.closest("button, a, .tab, .pkg-cta")) playTap();
@@ -444,6 +660,7 @@ document.addEventListener("DOMContentLoaded", () => {
   document.addEventListener("visibilitychange", resumeAudio);
   window.addEventListener("focus", resumeAudio);
 
+  // View switching
   document.querySelectorAll("[data-view]").forEach((el) => {
     el.addEventListener("click", (e) => {
       e.preventDefault();
@@ -451,14 +668,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  document.getElementById("choose-package").addEventListener("click", () => {
-    const stage = document.getElementById("stage");
-    const target = document.querySelector("#view-install #first-package");
-    if (!target) return;
-    const top = target.getBoundingClientRect().top - stage.getBoundingClientRect().top + stage.scrollTop - 12;
-    stage.scrollTo({ top, behavior: "smooth" });
-  });
-
+  // Audio toggle
   document.getElementById("audio-toggle").addEventListener("click", () => {
     musicOn = !musicOn;
     if (musicGain) musicGain.gain.value = musicOn ? 0.11 : 0;
@@ -468,50 +678,44 @@ document.addEventListener("DOMContentLoaded", () => {
       startMusic();
     } else stopMusic();
     document.getElementById("audio-toggle").setAttribute("aria-label", musicOn ? "Mute music" : "Play music");
-    const onIco = document.querySelector(".ico-vol-on");
-    const offIco = document.querySelector(".ico-vol-off");
-    if (onIco && offIco) {
-      onIco.classList.toggle("hidden", !musicOn);
-      offIco.classList.toggle("hidden", musicOn);
-    }
+    updateAudioIcon();
   });
 
+  // Network pill clicks (sync across all copies)
   document.body.addEventListener("click", (e) => {
     const netBtn = e.target.closest("[data-net]");
     if (netBtn) {
-      cardState[netBtn.dataset.pkg] = netBtn.dataset.net;
-      const card = netBtn.closest(".pkg");
-      card.dataset.network = netBtn.dataset.net;
-      const group = netBtn.parentElement;
-      const idx = NETWORKS.findIndex((n) => n.id === netBtn.dataset.net);
-      group.querySelector(".network-pills__thumb").style.transform = `translateX(${idx * 100}%)`;
-      group.querySelectorAll("button").forEach((b) => {
-        const on = b.dataset.net === netBtn.dataset.net;
-        b.classList.toggle("is-on", on);
-        b.setAttribute("aria-checked", on);
+      const pkgId = netBtn.dataset.pkg;
+      const netId = netBtn.dataset.net;
+      cardState[pkgId] = netId;
+      // Update all cards with this pkgId
+      document.querySelectorAll(`.pkg[data-pkg="${pkgId}"]`).forEach(card => {
+        card.dataset.network = netId;
+        const group = card.querySelector(".network-pills");
+        if (group) {
+          const idx = NETWORKS.findIndex(n => n.id === netId);
+          const thumb = group.querySelector(".network-pills__thumb");
+          if (thumb) thumb.style.transform = `translateX(${idx * 100}%)`;
+          group.querySelectorAll("button").forEach(b => {
+            const on = b.dataset.net === netId;
+            b.classList.toggle("is-on", on);
+            b.setAttribute("aria-checked", on);
+          });
+        }
       });
       return;
     }
-    const inst = e.target.closest("[data-install]");
-    if (inst) openModal(inst.dataset.install);
-    if (e.target.id === "pay-now") {
-      const btn = e.target;
-      btn.disabled = true;
-      btn.textContent = "Opening payment…";
-      Promise.resolve(payUrl || payOrder)
-        .then((link) => {
-          if (!link) throw new Error("missing");
-          goToPayLink(link);
-        })
-        .catch(() => {
-          btn.disabled = false;
-          btn.textContent = "Make payment now";
-          const note = document.querySelector(".result-note");
-          if (note) note.textContent = "Could not open payment. Try again.";
-        });
-    }
-    if (e.target.id === "close-pay" || e.target.id === "modal-close" || e.target.id === "modal-overlay") {
+
+    // Get eSIM button
+    const getBtn = e.target.closest("[data-get]");
+    if (getBtn) openModal(getBtn.dataset.get);
+
+    // Modal close triggers
+    if (e.target.id === "modal-close" || e.target.id === "modal-overlay") {
       closeModal();
     }
   });
+
+  // Keyboard focus trap
+  document.addEventListener("keydown", trapFocus);
 });
