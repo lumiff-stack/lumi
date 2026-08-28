@@ -194,7 +194,7 @@ let master = null;
 let musicGain = null;
 let musicTimer = null;
 let unlocked = false;
-let musicOn = false;
+let musicOn = true; // Sound ON by default
 
 function audio() {
   const Ctor = window.AudioContext || window.webkitAudioContext;
@@ -205,7 +205,7 @@ function audio() {
     master.gain.value = 0.7;
     master.connect(audioCtx.destination);
     musicGain = audioCtx.createGain();
-    musicGain.gain.value = 0;
+    musicGain.gain.value = 0.11; // Pre-set volume
     musicGain.connect(master);
   }
   return audioCtx;
@@ -412,7 +412,6 @@ function openModal(pkgId) {
     if (focusableElements.length) focusableElements[0].focus();
   }, 50);
 
-  // Build scan panel once
   const body = document.getElementById("modal-body");
   body.innerHTML = buildScanHTML(0);
   scanStepElements = {
@@ -640,6 +639,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const hash = (location.hash || "#home").slice(1);
   showView(["home", "install", "about"].includes(hash) ? hash : "home");
 
+  // Audio is ON by default – update icon to match
   updateAudioIcon();
 
   document.body.addEventListener("pointerdown", (e) => {
@@ -668,9 +668,8 @@ document.addEventListener("DOMContentLoaded", () => {
     updateAudioIcon();
   });
 
-  // Direct click listener for modal close (to guarantee it works)
   document.getElementById("modal-close").addEventListener("click", closeModal);
-  // Also keep the delegated one for overlay and other cases
+
   document.body.addEventListener("click", (e) => {
     const netBtn = e.target.closest("[data-net]");
     if (netBtn) {
