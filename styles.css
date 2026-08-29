@@ -1,4 +1,4 @@
-/* Lumi — Premium Neon Glassmorphism (FIXED: Nav + Background Animations) */
+/* Lumi — Premium Neon Glassmorphism (DRAMATIC ANIMATIONS & GLOWS) */
 
 :root {
   /* --- Background --- */
@@ -23,11 +23,12 @@
   --color-gold: #FFD34A;
 
   /* --- Glow Effects --- */
-  --glow-cyan: 0 0 40px rgba(47, 231, 223, 0.35);
-  --glow-blue: 0 0 40px rgba(36, 157, 255, 0.35);
-  --glow-violet: 0 0 40px rgba(117, 72, 255, 0.35);
-  --glow-magenta: 0 0 40px rgba(233, 77, 255, 0.35);
-  --glow-gold: 0 0 40px rgba(255, 211, 74, 0.35);
+  --glow-cyan: 0 0 60px rgba(47, 231, 223, 0.50);
+  --glow-blue: 0 0 60px rgba(36, 157, 255, 0.50);
+  --glow-violet: 0 0 60px rgba(117, 72, 255, 0.50);
+  --glow-magenta: 0 0 60px rgba(233, 77, 255, 0.50);
+  --glow-gold: 0 0 60px rgba(255, 211, 74, 0.50);
+  --glow-success: 0 0 80px rgba(47, 231, 223, 0.60), 0 0 160px rgba(47, 231, 223, 0.20);
 
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
   --ease-in-out: cubic-bezier(0.45, 0, 0.55, 1);
@@ -59,7 +60,7 @@ img { max-width: 100%; outline: none; }
 .view.is-on { display: block; animation: page-in 320ms var(--ease-out) both; }
 .hidden { display: none !important; }
 
-/* --- App Shell & Aurora Background (VISIBLE ANIMATION) --- */
+/* --- App Shell & Aurora Background --- */
 .app {
   position: fixed;
   top: 0;
@@ -74,7 +75,7 @@ img { max-width: 100%; outline: none; }
   background: var(--color-bg);
 }
 
-/* Cinematic aurora lighting — MORE VISIBLE */
+/* Cinematic aurora lighting — HIGHLY VISIBLE */
 .app::before {
   content: "";
   position: absolute;
@@ -82,21 +83,21 @@ img { max-width: 100%; outline: none; }
   z-index: 0;
   pointer-events: none;
   background:
-    radial-gradient(ellipse 70% 50% at 80% 0%, rgba(47, 231, 223, 0.18), transparent 50%),
-    radial-gradient(ellipse 60% 45% at 90% 10%, rgba(36, 157, 255, 0.15), transparent 45%),
-    radial-gradient(ellipse 55% 40% at 70% 20%, rgba(117, 72, 255, 0.12), transparent 40%),
-    radial-gradient(ellipse 50% 35% at 20% 80%, rgba(233, 77, 255, 0.10), transparent 40%),
-    radial-gradient(ellipse 45% 30% at 10% 90%, rgba(255, 211, 74, 0.08), transparent 35%);
+    radial-gradient(ellipse 80% 60% at 80% 0%, rgba(47, 231, 223, 0.20), transparent 50%),
+    radial-gradient(ellipse 70% 50% at 90% 10%, rgba(36, 157, 255, 0.18), transparent 45%),
+    radial-gradient(ellipse 60% 45% at 70% 20%, rgba(117, 72, 255, 0.15), transparent 40%),
+    radial-gradient(ellipse 50% 40% at 20% 80%, rgba(233, 77, 255, 0.12), transparent 40%),
+    radial-gradient(ellipse 45% 35% at 10% 90%, rgba(255, 211, 74, 0.10), transparent 35%);
   animation: aurora-drift 22s var(--ease-in-out) infinite alternate;
-  filter: blur(40px);
+  filter: blur(30px);
   will-change: transform, opacity;
 }
 
 @keyframes aurora-drift {
   0% { transform: translate3d(0, 0, 0) scale(1) rotate(0deg); opacity: 0.7; }
-  33% { transform: translate3d(-5%, 4%, 0) scale(1.1) rotate(3deg); opacity: 1; }
-  66% { transform: translate3d(4%, -3%, 0) scale(0.9) rotate(-3deg); opacity: 0.6; }
-  100% { transform: translate3d(-6%, 5%, 0) scale(1.15) rotate(2deg); opacity: 0.8; }
+  33% { transform: translate3d(-6%, 5%, 0) scale(1.15) rotate(3deg); opacity: 1; }
+  66% { transform: translate3d(5%, -4%, 0) scale(0.88) rotate(-3deg); opacity: 0.5; }
+  100% { transform: translate3d(-7%, 6%, 0) scale(1.20) rotate(2deg); opacity: 0.8; }
 }
 
 /* --- Chrome Header --- */
@@ -120,21 +121,20 @@ img { max-width: 100%; outline: none; }
 }
 .header-end { display: flex; align-items: center; gap: 6px; }
 
-/* Logo */
 .logo { display: inline-flex; align-items: center; gap: 10px; color: var(--color-fg); text-decoration: none; transition: transform 0.2s; }
 .logo:active { transform: scale(0.96); }
 .logo-mark {
   display: grid; place-items: center;
   width: 44px; height: 44px;
   border-radius: 14px;
-  background: rgba(47, 231, 223, 0.06);
+  background: rgba(47, 231, 223, 0.08);
   color: var(--color-cyan);
-  box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.06), var(--glow-cyan);
+  box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.10), var(--glow-cyan);
   animation: logo-pulse 4s var(--ease-in-out) infinite;
 }
 @keyframes logo-pulse {
-  0%, 100% { box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.06), 0 0 20px rgba(47, 231, 223, 0.02); }
-  50% { box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.15), 0 0 50px rgba(47, 231, 223, 0.10); }
+  0%, 100% { box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.08), 0 0 30px rgba(47, 231, 223, 0.04); }
+  50% { box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.20), 0 0 60px rgba(47, 231, 223, 0.15); }
 }
 .logo-word { font-size: 1.5rem; font-weight: 800; letter-spacing: -0.02em; color: var(--color-fg); }
 .logo-tag { margin-top: 2px; color: var(--color-cyan); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.15em; text-transform: uppercase; opacity: 0.8; text-shadow: var(--glow-cyan); }
@@ -164,11 +164,11 @@ img { max-width: 100%; outline: none; }
 .nav-link:hover { color: var(--color-fg); background: rgba(255, 255, 255, 0.03); }
 .nav-link.is-active {
   color: var(--color-cyan);
-  background: rgba(47, 231, 223, 0.04);
-  box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.02), var(--glow-cyan);
+  background: rgba(47, 231, 223, 0.06);
+  box-shadow: 0 0 0 1px rgba(47, 231, 223, 0.04), var(--glow-cyan);
 }
 
-/* --- Bottom Navigation (FIXED ACTIVE STATE) --- */
+/* --- Bottom Navigation --- */
 .bottom-nav {
   position: fixed; left: 0; right: 0; bottom: 0;
   z-index: 100;
@@ -194,12 +194,10 @@ img { max-width: 100%; outline: none; }
 .tab svg { width: 20px; height: 20px; stroke: var(--color-subtle); stroke-width: 1.8; fill: none; transition: all 0.25s; }
 .tab span { transition: all 0.25s; font-size: 0.6rem; letter-spacing: 0.08em; color: var(--color-subtle); }
 
-/* FIX: Active state - more visible with stronger glow */
 .tab.is-active { color: var(--color-cyan); }
-.tab.is-active svg { stroke: var(--color-cyan); filter: drop-shadow(0 0 15px rgba(47, 231, 223, 0.50)); }
-.tab.is-active span { color: var(--color-cyan); font-weight: 700; text-shadow: 0 0 20px rgba(47, 231, 223, 0.20); }
+.tab.is-active svg { stroke: var(--color-cyan); filter: drop-shadow(0 0 20px rgba(47, 231, 223, 0.60)); }
+.tab.is-active span { color: var(--color-cyan); font-weight: 700; text-shadow: 0 0 30px rgba(47, 231, 223, 0.30); }
 
-/* Active indicator dot - MORE VISIBLE */
 .tab.is-active::after {
   content: "";
   position: absolute; top: 4px; left: 50%;
@@ -207,17 +205,16 @@ img { max-width: 100%; outline: none; }
   width: 16px; height: 3px;
   border-radius: 99px;
   background: var(--color-cyan);
-  box-shadow: 0 0 25px rgba(47, 231, 223, 0.60);
+  box-shadow: 0 0 30px rgba(47, 231, 223, 0.70);
   animation: dot-glow 1.5s var(--ease-in-out) infinite;
 }
 @keyframes dot-glow {
-  0%, 100% { opacity: 1; box-shadow: 0 0 25px rgba(47, 231, 223, 0.60); }
-  50% { opacity: 0.7; box-shadow: 0 0 40px rgba(47, 231, 223, 0.80); }
+  0%, 100% { opacity: 1; box-shadow: 0 0 30px rgba(47, 231, 223, 0.70); }
+  50% { opacity: 0.6; box-shadow: 0 0 50px rgba(47, 231, 223, 0.90); }
 }
 
 .tab:active { transform: scale(0.92); }
 
-/* Hover state for non-active tabs */
 @media (hover: hover) {
   .tab:hover:not(.is-active) { color: var(--color-muted); }
   .tab:hover:not(.is-active) svg { stroke: var(--color-muted); }
@@ -234,7 +231,7 @@ img { max-width: 100%; outline: none; }
   background: var(--color-bg);
 }
 
-/* --- Hero & Holographic Ribbons (MORE VISIBLE) --- */
+/* --- Hero & Holographic Ribbons --- */
 .hero {
   position: relative; overflow: hidden;
   padding: clamp(20px, 4vw, 36px) clamp(16px, 4.2vw, 24px) 12px;
@@ -253,27 +250,27 @@ img { max-width: 100%; outline: none; }
   will-change: transform, opacity;
 }
 .hero-ribbon--1 {
-  width: 55%; height: 65%; top: 0%; right: 0%;
-  background: radial-gradient(ellipse at 50% 30%, rgba(47, 231, 223, 0.40), transparent 60%);
-  filter: blur(40px);
+  width: 60%; height: 70%; top: 0%; right: 0%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(47, 231, 223, 0.45), transparent 60%);
+  filter: blur(30px);
   animation-duration: 14s;
 }
 .hero-ribbon--2 {
-  width: 45%; height: 55%; top: 15%; right: -5%;
-  background: radial-gradient(ellipse at 60% 40%, rgba(36, 157, 255, 0.35), transparent 60%);
-  filter: blur(45px);
+  width: 50%; height: 60%; top: 15%; right: -5%;
+  background: radial-gradient(ellipse at 60% 40%, rgba(36, 157, 255, 0.40), transparent 60%);
+  filter: blur(35px);
   animation-duration: 18s; animation-direction: alternate-reverse;
 }
 .hero-ribbon--3 {
-  width: 40%; height: 45%; top: 35%; right: 5%;
-  background: radial-gradient(ellipse at 40% 50%, rgba(117, 72, 255, 0.30), transparent 60%);
-  filter: blur(50px);
+  width: 45%; height: 50%; top: 35%; right: 5%;
+  background: radial-gradient(ellipse at 40% 50%, rgba(117, 72, 255, 0.35), transparent 60%);
+  filter: blur(40px);
   animation-duration: 20s;
 }
 .hero-ribbon--4 {
-  width: 30%; height: 35%; top: 55%; right: 15%;
-  background: radial-gradient(ellipse at 50% 50%, rgba(233, 77, 255, 0.25), transparent 60%);
-  filter: blur(45px);
+  width: 35%; height: 40%; top: 55%; right: 15%;
+  background: radial-gradient(ellipse at 50% 50%, rgba(233, 77, 255, 0.30), transparent 60%);
+  filter: blur(35px);
   animation-duration: 22s; animation-direction: alternate-reverse;
 }
 @keyframes ribbon-float {
@@ -309,7 +306,7 @@ img { max-width: 100%; outline: none; }
   50% { opacity: 0.3; transform: scale(0.7); box-shadow: 0 0 10px rgba(47, 231, 223, 0.20); }
 }
 
-/* --- Trust Badges (Glass Feature Cards) --- */
+/* --- Trust Badges --- */
 .trust {
   position: relative; z-index: 1;
   display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
@@ -361,7 +358,9 @@ img { max-width: 100%; outline: none; }
 .pkg-list { display: grid; grid-template-columns: 1fr; gap: 16px; }
 #first-package { scroll-margin-top: 80px; }
 
-/* --- Package Card (Glass + Animated Holographic Ribbon) --- */
+/* ============================================================
+   PACKAGE CARD – DRAMATIC HOLOGRAPHIC RIBBON ANIMATION
+   ============================================================ */
 .pkg {
   position: relative; isolation: isolate;
   overflow: hidden;
@@ -378,68 +377,95 @@ img { max-width: 100%; outline: none; }
 .pkg:hover { transform: translateY(-6px); box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 32px 80px rgba(0, 0, 0, 0.50), 0 0 80px rgba(47, 231, 223, 0.04); }
 .pkg > * { position: relative; z-index: 2; }
 
-/* --- Holographic Ribbon Background (MORE VISIBLE ANIMATION) --- */
+/* --- HOLOGRAPHIC RIBBON – LIVING, BREATHING ANIMATION --- */
 .pkg::after {
   content: "";
   position: absolute; z-index: 0;
-  inset: -20% -10%;
+  inset: -30% -20%;
   pointer-events: none;
   opacity: 1;
   background:
-    radial-gradient(ellipse 55% 35% at 70% 40%, rgba(47, 231, 223, 0.25), transparent 60%),
-    radial-gradient(ellipse 45% 30% at 85% 30%, rgba(36, 157, 255, 0.18), transparent 55%),
-    radial-gradient(ellipse 40% 25% at 60% 60%, rgba(117, 72, 255, 0.15), transparent 50%),
-    radial-gradient(ellipse 30% 20% at 80% 70%, rgba(233, 77, 255, 0.12), transparent 50%);
-  animation: ribbon-drift 18s var(--ease-in-out) infinite alternate;
-  filter: blur(35px);
-  will-change: transform, opacity;
-}
-@keyframes ribbon-drift {
-  0% { transform: translate3d(-10%, -8%, 0) scale(1) rotate(-5deg); opacity: 0.6; }
-  50% { transform: translate3d(10%, 6%, 0) scale(1.12) rotate(5deg); opacity: 1; }
-  100% { transform: translate3d(-5%, 10%, 0) scale(0.90) rotate(-3deg); opacity: 0.7; }
+    radial-gradient(ellipse 60% 40% at 70% 40%, rgba(47, 231, 223, 0.35), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 30%, rgba(36, 157, 255, 0.25), transparent 55%),
+    radial-gradient(ellipse 45% 30% at 60% 60%, rgba(117, 72, 255, 0.20), transparent 50%),
+    radial-gradient(ellipse 35% 25% at 80% 70%, rgba(233, 77, 255, 0.18), transparent 50%);
+  animation: ribbon-breathing 14s var(--ease-in-out) infinite alternate;
+  filter: blur(25px);
+  will-change: transform, opacity, filter;
 }
 
-/* Individual card ribbon colors */
+@keyframes ribbon-breathing {
+  0% { 
+    transform: translate3d(-12%, -10%, 0) scale(1) rotate(-6deg); 
+    opacity: 0.5; 
+    filter: blur(25px);
+  }
+  33% { 
+    transform: translate3d(8%, 4%, 0) scale(1.15) rotate(4deg); 
+    opacity: 1; 
+    filter: blur(20px);
+  }
+  66% { 
+    transform: translate3d(-4%, 12%, 0) scale(0.88) rotate(-3deg); 
+    opacity: 0.7; 
+    filter: blur(30px);
+  }
+  100% { 
+    transform: translate3d(10%, -6%, 0) scale(1.08) rotate(5deg); 
+    opacity: 0.9; 
+    filter: blur(22px);
+  }
+}
+
+/* Individual card ribbon colors - MORE VIBRANT */
 .pkg--spark::after {
-  background: radial-gradient(ellipse 55% 35% at 70% 40%, rgba(255, 211, 74, 0.30), transparent 60%),
-             radial-gradient(ellipse 45% 30% at 85% 30%, rgba(47, 231, 223, 0.15), transparent 55%);
+  background: 
+    radial-gradient(ellipse 60% 40% at 70% 40%, rgba(255, 211, 74, 0.40), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 30%, rgba(47, 231, 223, 0.20), transparent 55%);
 }
 .pkg--pulse::after {
-  background: radial-gradient(ellipse 55% 35% at 70% 40%, rgba(47, 231, 223, 0.35), transparent 60%),
-             radial-gradient(ellipse 45% 30% at 85% 30%, rgba(36, 157, 255, 0.20), transparent 55%);
+  background: 
+    radial-gradient(ellipse 60% 40% at 70% 40%, rgba(47, 231, 223, 0.45), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 30%, rgba(36, 157, 255, 0.30), transparent 55%);
 }
 .pkg--drift::after {
-  background: radial-gradient(ellipse 55% 35% at 70% 40%, rgba(117, 72, 255, 0.30), transparent 60%),
-             radial-gradient(ellipse 45% 30% at 85% 30%, rgba(47, 231, 223, 0.15), transparent 55%);
+  background: 
+    radial-gradient(ellipse 60% 40% at 70% 40%, rgba(117, 72, 255, 0.40), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 30%, rgba(47, 231, 223, 0.20), transparent 55%);
 }
 .pkg--aether::after {
-  background: radial-gradient(ellipse 55% 35% at 70% 40%, rgba(233, 77, 255, 0.30), transparent 60%),
-             radial-gradient(ellipse 45% 30% at 85% 30%, rgba(255, 211, 74, 0.15), transparent 55%);
+  background: 
+    radial-gradient(ellipse 60% 40% at 70% 40%, rgba(233, 77, 255, 0.40), transparent 60%),
+    radial-gradient(ellipse 50% 35% at 85% 30%, rgba(255, 211, 74, 0.20), transparent 55%);
 }
 
-/* --- Glowing Animated Border --- */
+/* --- SPINNING GLOW BORDER --- */
 .pkg::before {
   content: "";
   position: absolute; z-index: 1;
-  inset: -1px;
-  border-radius: 29px;
-  padding: 1px;
-  background: conic-gradient(from var(--angle, 0deg), rgba(47, 231, 223, 0.8), rgba(36, 157, 255, 0.4), rgba(117, 72, 255, 0.4), rgba(233, 77, 255, 0.4), rgba(47, 231, 223, 0.8));
+  inset: -2px;
+  border-radius: 30px;
+  padding: 2px;
+  background: conic-gradient(from var(--angle, 0deg), 
+    rgba(47, 231, 223, 0.9), 
+    rgba(36, 157, 255, 0.4), 
+    rgba(117, 72, 255, 0.4), 
+    rgba(233, 77, 255, 0.4), 
+    rgba(47, 231, 223, 0.9));
   -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
-  animation: spin-border 6s linear infinite;
+  animation: spin-border 5s linear infinite;
 }
 @property --angle { syntax: '<angle>'; initial-value: 0deg; inherits: false; }
 @keyframes spin-border { to { --angle: 360deg; } }
 
-.pkg--spark::before { background: conic-gradient(from var(--angle, 0deg), rgba(255, 211, 74, 0.8), rgba(47, 231, 223, 0.4), rgba(255, 211, 74, 0.8)); }
+.pkg--spark::before { background: conic-gradient(from var(--angle, 0deg), rgba(255, 211, 74, 0.9), rgba(47, 231, 223, 0.4), rgba(255, 211, 74, 0.9)); }
 .pkg--pulse::before { background: conic-gradient(from var(--angle, 0deg), rgba(47, 231, 223, 0.9), rgba(36, 157, 255, 0.5), rgba(47, 231, 223, 0.9)); }
-.pkg--drift::before { background: conic-gradient(from var(--angle, 0deg), rgba(117, 72, 255, 0.8), rgba(47, 231, 223, 0.4), rgba(117, 72, 255, 0.8)); }
-.pkg--aether::before { background: conic-gradient(from var(--angle, 0deg), rgba(233, 77, 255, 0.8), rgba(255, 211, 74, 0.4), rgba(233, 77, 255, 0.8)); }
+.pkg--drift::before { background: conic-gradient(from var(--angle, 0deg), rgba(117, 72, 255, 0.9), rgba(47, 231, 223, 0.4), rgba(117, 72, 255, 0.9)); }
+.pkg--aether::before { background: conic-gradient(from var(--angle, 0deg), rgba(233, 77, 255, 0.9), rgba(255, 211, 74, 0.4), rgba(233, 77, 255, 0.9)); }
 
 /* --- Package Inner Elements --- */
 .pkg-kicker { margin: 0 0 2px; color: var(--color-cyan); font-size: 0.6rem; font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; text-shadow: var(--glow-cyan); }
