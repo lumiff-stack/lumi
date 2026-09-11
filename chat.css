@@ -37,7 +37,7 @@
     0 4px 12px rgba(13, 148, 136, 0.25),
     0 8px 24px rgba(13, 148, 136, 0.15);
   cursor: pointer;
-  transition: transform 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, background 0.2s ease, opacity 0.2s ease;
   animation: cw-launcher-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) both;
   overflow: hidden;
   isolation: isolate;
@@ -70,15 +70,6 @@
   transform: scale(0.6) rotate(-45deg);
 }
 
-.chat-widget.is-open .chat-launcher__icon--chat {
-  opacity: 0;
-  transform: scale(0.6) rotate(45deg);
-}
-.chat-widget.is-open .chat-launcher__icon--close {
-  opacity: 1;
-  transform: scale(1) rotate(0deg);
-}
-
 .chat-launcher__dot {
   position: absolute;
   top: 8px;
@@ -108,6 +99,14 @@
 @keyframes cw-launcher-in {
   from { opacity: 0; transform: scale(0.5) translateY(20px); }
   to { opacity: 1; transform: none; }
+}
+
+/* ——— Hide launcher when chat is open (all viewports) ——— */
+.chat-widget.is-open .chat-launcher {
+  opacity: 0;
+  pointer-events: none;
+  transform: scale(0.7);
+  transition: opacity 0.15s ease, transform 0.2s ease;
 }
 
 /* ==========================================================
@@ -182,7 +181,7 @@
 
 .chat-panel {
   position: absolute;
-  bottom: 76px;
+  bottom: 0;
   right: 0;
   width: 400px;
   height: 620px;
@@ -199,6 +198,7 @@
   opacity: 0;
   pointer-events: none;
   transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.2s ease;
+  z-index: 2;
 }
 .chat-widget.is-open .chat-panel {
   transform: scale(1) translateY(0);
@@ -444,13 +444,10 @@
     border: none;
     transform: translateY(100%);
     transform-origin: bottom center;
+    z-index: 9999;
   }
   .chat-widget.is-open .chat-panel {
     transform: translateY(0);
-  }
-  .chat-widget.is-open .chat-launcher {
-    opacity: 0;
-    pointer-events: none;
   }
   .chat-msg__bubble {
     font-size: 0.9375rem;
