@@ -155,13 +155,27 @@ function unlockBodyScroll() {
   document.body.classList.remove("has-chat-open");
 }
 
+function resetPanelPosition() {
+  chatPanel.style.top = "";
+  chatPanel.style.height = "";
+  chatPanel.style.bottom = "";
+}
+
 function updatePanelHeight() {
   if (!window.visualViewport) return;
+
+  // Desktop — reset to CSS defaults
   if (window.innerWidth > 600) {
-    chatPanel.style.height = "";
+    resetPanelPosition();
     return;
   }
-  chatPanel.style.height = window.visualViewport.height + "px";
+
+  const vv = window.visualViewport;
+  // Pin the panel to the top of the visual viewport and shrink
+  // it to the visible height above the keyboard
+  chatPanel.style.top = vv.offsetTop + "px";
+  chatPanel.style.height = vv.height + "px";
+  chatPanel.style.bottom = "auto";
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -267,7 +281,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!chatState.isOpen) return;
     if (window.innerWidth > 600) {
       unlockBodyScroll();
-      chatPanel.style.height = "";
+      resetPanelPosition();
     } else {
       lockBodyScroll();
       updatePanelHeight();
@@ -316,12 +330,12 @@ function bindEvents() {
     }
   });
 
-  // When keyboard opens (textarea focused), scroll to bottom
+  // When keyboard opens (textarea focused), re-pin and scroll
   chatTextarea.addEventListener("focus", () => {
     setTimeout(() => {
       updatePanelHeight();
       scrollMessagesToBottom();
-    }, 300);
+    }, 350);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -396,7 +410,7 @@ function closePanel() {
   chatLauncher.setAttribute("aria-label", "Open support chat");
 
   unlockBodyScroll();
-  chatPanel.style.height = "";
+  resetPanelPosition();
 }
 
 /* ═══════════════════════════════════════════════════════════
