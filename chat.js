@@ -2,7 +2,7 @@
    Lumi — Floating support chat with Cerebras AI
    ========================================================== */
 
-const CEREBRAS_API_KEY = 'csk-4p4k3mfy99ydxde489rvhj4hnp2wt3khtfpxvyd692xh6kcr';
+const CEREBRAS_API_KEY = 'csk-jjy366j6h5npjnt966dwjnkjyd6869tfcffh3x3ejrmnd3x4';
 const CEREBRAS_URL = 'https://api.cerebras.ai/v1/chat/completions';
 const CEREBRAS_MODEL = 'gpt-oss-120b';
 const CEREBRAS_TEMPERATURE = 0.6;
