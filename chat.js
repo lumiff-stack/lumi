@@ -7,7 +7,7 @@
    to a server-side endpoint (your Cloudflare Worker). */
 const OPENROUTER_API_KEY = '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';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
-const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+const OPENROUTER_MODEL = 'google/gemini-2.0-flash-exp:free';
 const OPENROUTER_TEMPERATURE = 0.6;
 const OPENROUTER_MAX_TOKENS = 300;
 const OPENROUTER_TIMEOUT_MS = 25000;
