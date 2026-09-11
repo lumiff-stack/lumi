@@ -436,10 +436,8 @@
     position: fixed;
     inset: 0;
     width: 100vw;
-    height: 100dvh;
+    height: 100%;
     max-height: none;
-    bottom: 0;
-    right: 0;
     border-radius: 0;
     border: none;
     transform: translateY(100%);
@@ -452,8 +450,28 @@
   .chat-msg__bubble {
     font-size: 0.9375rem;
   }
+
+  /* Input area floats above the keyboard using the inset variable */
+  .chat-panel__input {
+    padding-bottom: calc(
+      12px + var(--keyboard-inset, 0px) + env(safe-area-inset-bottom)
+    );
+    transition: padding-bottom 0.1s ease-out;
+  }
 }
 
+/* ==========================================================
+   Body scroll lock while chat is open (mobile)
+   ========================================================== */
+
+@media (max-width: 600px) {
+  html.has-chat-open,
+  body.has-chat-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+}
 /* ==========================================================
    Hidden state
    ========================================================== */
