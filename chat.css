@@ -472,6 +472,19 @@
     touch-action: none;
   }
 }
+
+/* ==========================================================
+   Body scroll lock while chat is open (mobile)
+   ========================================================== */
+
+@media (max-width: 600px) {
+  html.has-chat-open,
+  body.has-chat-open {
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+  }
+}
 /* ==========================================================
    Hidden state
    ========================================================== */
