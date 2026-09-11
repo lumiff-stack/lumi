@@ -1,13 +1,16 @@
 /* ==========================================================
-   Lumi — Floating support chat with Cerebras AI
+   Lumi — Floating support chat with OpenRouter AI
    ========================================================== */
 
-const CEREBRAS_API_KEY = 'csk-jjy366j6h5npjnt966dwjnkjyd6869tfcffh3x3ejrmnd3x4';
-const CEREBRAS_URL = 'https://api.cerebras.ai/v1/chat/completions';
-const CEREBRAS_MODEL = 'gpt-oss-120b';
-const CEREBRAS_TEMPERATURE = 0.6;
-const CEREBRAS_MAX_TOKENS = 300;
-const CEREBRAS_TIMEOUT_MS = 20000;
+/* ⚠️  API key is visible in page source — testing only.
+   Before going live, rotate this key and move the API call
+   to a server-side endpoint (your Cloudflare Worker). */
+const OPENROUTER_API_KEY = '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';
+const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
+const OPENROUTER_MODEL = 'meta-llama/llama-3.3-70b-instruct:free';
+const OPENROUTER_TEMPERATURE = 0.6;
+const OPENROUTER_MAX_TOKENS = 300;
+const OPENROUTER_TIMEOUT_MS = 25000;
 
 const LUMI_SYSTEM_PROMPT = `
 You are Lumi — the friendly, casual support assistant for Lumi eSIM 
@@ -376,7 +379,7 @@ async function sendMessage() {
   showTypingIndicator();
 
   try {
-    const reply = await askCerebras();
+    const reply = await askAI();
     hideTypingIndicator();
     if (!reply) throw new Error("Empty reply");
     appendMessage("ai", reply);
@@ -448,30 +451,32 @@ function trimHistory() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   CEREBRAS API
+   OPENROUTER API CALL
    ═══════════════════════════════════════════════════════════ */
 
-async function askCerebras() {
+async function askAI() {
   const messages = [
     { role: "system", content: LUMI_SYSTEM_PROMPT },
     ...chatState.history,
   ];
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), CEREBRAS_TIMEOUT_MS);
+  const timeoutId = setTimeout(() => controller.abort(), OPENROUTER_TIMEOUT_MS);
 
   try {
-    const resp = await fetch(CEREBRAS_URL, {
+    const resp = await fetch(OPENROUTER_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": "Bearer " + CEREBRAS_API_KEY,
+        "Authorization": "Bearer " + OPENROUTER_API_KEY,
+        "HTTP-Referer": "https://lumiesim.store",
+        "X-Title": "Lumi eSIM Support",
       },
       body: JSON.stringify({
-        model: CEREBRAS_MODEL,
+        model: OPENROUTER_MODEL,
         messages,
-        temperature: CEREBRAS_TEMPERATURE,
-        max_tokens: CEREBRAS_MAX_TOKENS,
+        temperature: OPENROUTER_TEMPERATURE,
+        max_tokens: OPENROUTER_MAX_TOKENS,
       }),
       signal: controller.signal,
     });
@@ -480,11 +485,17 @@ async function askCerebras() {
 
     if (!resp.ok) {
       const err = await resp.json().catch(() => ({}));
-      throw new Error(err.error?.message || "Cerebras HTTP " + resp.status);
+      throw new Error(err.error?.message || "OpenRouter HTTP " + resp.status);
     }
 
     const data = await resp.json();
-    return data.choices?.[0]?.message?.content?.trim() || "";
+
+    if (data.error) {
+      throw new Error(data.error.message || "OpenRouter error");
+    }
+
+    const reply = data.choices?.[0]?.message?.content?.trim() || "";
+    return reply;
   } catch (err) {
     clearTimeout(timeoutId);
     throw err;
