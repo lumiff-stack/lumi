@@ -2,9 +2,6 @@
    Lumi — Floating support chat with OpenRouter AI
    ========================================================== */
 
-/* ⚠️  API key is visible in page source — testing only.
-   Before going live, rotate this key and move the API call
-   to a server-side endpoint (your Cloudflare Worker). */
 const OPENROUTER_API_KEY = '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';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_MODEL = 'inclusionai/ling-3.0-flash-vl:free';
@@ -145,6 +142,29 @@ let chatWidget, chatLauncher, chatPanel, chatPanelClose, chatGreeting,
     chatGreetingClose, chatMessages, chatForm, chatTextarea, chatSend;
 
 /* ═══════════════════════════════════════════════════════════
+   SCROLL LOCK + VIEWPORT HEIGHT (mobile keyboard fix)
+   ═══════════════════════════════════════════════════════════ */
+
+function lockBodyScroll() {
+  document.documentElement.classList.add("has-chat-open");
+  document.body.classList.add("has-chat-open");
+}
+
+function unlockBodyScroll() {
+  document.documentElement.classList.remove("has-chat-open");
+  document.body.classList.remove("has-chat-open");
+}
+
+function updatePanelHeight() {
+  if (!window.visualViewport) return;
+  if (window.innerWidth > 600) {
+    chatPanel.style.height = "";
+    return;
+  }
+  chatPanel.style.height = window.visualViewport.height + "px";
+}
+
+/* ═══════════════════════════════════════════════════════════
    INIT
    ═══════════════════════════════════════════════════════════ */
 
@@ -229,6 +249,32 @@ document.addEventListener("DOMContentLoaded", () => {
   scheduleGreeting();
   seedWelcomeMessage();
 
+  // Watch for keyboard / viewport changes on mobile
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener("resize", () => {
+      if (chatState.isOpen) {
+        updatePanelHeight();
+        scrollMessagesToBottom();
+      }
+    });
+    window.visualViewport.addEventListener("scroll", () => {
+      if (chatState.isOpen) updatePanelHeight();
+    });
+  }
+
+  // Handle orientation / window resize
+  window.addEventListener("resize", () => {
+    if (!chatState.isOpen) return;
+    if (window.innerWidth > 600) {
+      unlockBodyScroll();
+      chatPanel.style.height = "";
+    } else {
+      lockBodyScroll();
+      updatePanelHeight();
+    }
+  });
+
+  // Hide chat when checkout modal is open
   const modal = document.getElementById("modal");
   if (modal) {
     const observer = new MutationObserver(() => {
@@ -268,6 +314,14 @@ function bindEvents() {
       e.preventDefault();
       if (!chatSend.disabled) sendMessage();
     }
+  });
+
+  // When keyboard opens (textarea focused), scroll to bottom
+  chatTextarea.addEventListener("focus", () => {
+    setTimeout(() => {
+      updatePanelHeight();
+      scrollMessagesToBottom();
+    }, 300);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -326,6 +380,10 @@ function openPanel() {
   chatLauncher.setAttribute("aria-expanded", "true");
   chatLauncher.setAttribute("aria-label", "Close support chat");
   dismissGreeting();
+
+  lockBodyScroll();
+  updatePanelHeight();
+
   if (window.innerWidth > 600) setTimeout(() => chatTextarea.focus(), 300);
   scrollMessagesToBottom();
 }
@@ -336,6 +394,9 @@ function closePanel() {
   chatPanel.setAttribute("aria-hidden", "true");
   chatLauncher.setAttribute("aria-expanded", "false");
   chatLauncher.setAttribute("aria-label", "Open support chat");
+
+  unlockBodyScroll();
+  chatPanel.style.height = "";
 }
 
 /* ═══════════════════════════════════════════════════════════
