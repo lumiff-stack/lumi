@@ -1,10 +1,10 @@
 /* ==========================================================
-   Lumi — static store
-   - 3-step checkout: Review → Details → Payment → Gateway
-   - Network pills sync across all cards
-   - Audio toggle (subtle ambient)
+   Lumi — main site logic
+   - Package rendering
+   - View switching
+   - 3-step checkout
+   - Audio toggle
    - Focus trap on modal
-   - Testimonials ready for real reviews
    ========================================================== */
 
 const NETWORKS = [
@@ -73,16 +73,8 @@ const SCAN_TITLES = [
   "Preparing your profile",
 ];
 
-/* ==========================================================
-   Utilities
-   ========================================================== */
-
-function formatPkr(n) {
-  return "Rs. " + n.toLocaleString("en-US");
-}
-function formatData(gb) {
-  return gb + " GB";
-}
+function formatPkr(n) { return "Rs. " + n.toLocaleString("en-US"); }
+function formatData(gb) { return gb + " GB"; }
 function formatValidity(days) {
   if (days % 30 === 0) {
     const m = days / 30;
@@ -91,23 +83,8 @@ function formatValidity(days) {
   return days + " days";
 }
 
-/* ==========================================================
-   Card state
-   ========================================================== */
-
 const cardState = {};
-PACKAGES.forEach((p) => {
-  cardState[p.id] = DEFAULT_NETWORK;
-});
-
-function netMark(id) {
-  const n = NETWORKS.find((x) => x.id === id);
-  return n ? n.name : id;
-}
-
-/* ==========================================================
-   Package card rendering
-   ========================================================== */
+PACKAGES.forEach((p) => { cardState[p.id] = DEFAULT_NETWORK; });
 
 function pills(pkgId) {
   const current = cardState[pkgId];
@@ -124,10 +101,9 @@ function pills(pkgId) {
     </div>`;
 }
 
-function cardHTML(pkg, first) {
+function cardHTML(pkg) {
   const net = cardState[pkg.id];
   let extra = "";
-
   if (pkg.kind === "pulse") {
     extra = `
       <span class="pkg-badge">${pkg.kicker}</span>
@@ -181,7 +157,7 @@ function sectionHTML(firstId) {
       <span class="section-kicker">Packages</span>
       <h2>Four plans. Your network.</h2>
       <div class="pkg-list">
-        ${PACKAGES.map((p) => cardHTML(p, false)).join("")}
+        ${PACKAGES.map((p) => cardHTML(p)).join("")}
       </div>
     </section>`;
 }
@@ -193,31 +169,16 @@ function paintPackages() {
   if (install) install.innerHTML = sectionHTML(true);
 }
 
-/* ==========================================================
-   Views
-   ========================================================== */
-
 function showView(name) {
-  document.querySelectorAll(".view").forEach((el) => {
-    el.classList.toggle("is-on", el.id === "view-" + name);
-  });
-  document.querySelectorAll(".tab").forEach((el) => {
-    el.classList.toggle("is-active", el.dataset.view === name);
-  });
-  document.querySelectorAll(".nav-link").forEach((el) => {
-    el.classList.toggle("is-active", el.dataset.view === name);
-  });
+  document.querySelectorAll(".view").forEach((el) => el.classList.toggle("is-on", el.id === "view-" + name));
+  document.querySelectorAll(".tab").forEach((el) => el.classList.toggle("is-active", el.dataset.view === name));
+  document.querySelectorAll(".nav-link").forEach((el) => el.classList.toggle("is-active", el.dataset.view === name));
   const stage = document.getElementById("stage");
   if (stage) stage.scrollTop = 0;
-  if (history && history.replaceState) {
-    history.replaceState(null, "", "#" + name);
-  }
+  if (history && history.replaceState) history.replaceState(null, "", "#" + name);
 }
 
-/* ==========================================================
-   Audio (subtle ambient)
-   ========================================================== */
-
+/* Audio */
 let audioCtx = null;
 let master = null;
 let musicGain = null;
@@ -239,7 +200,6 @@ function audio() {
   }
   return audioCtx;
 }
-
 function env(dur, peak) {
   const c = audio();
   if (!c || !master) return null;
@@ -250,7 +210,6 @@ function env(dur, peak) {
   g.connect(master);
   return g;
 }
-
 function playTap() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -264,7 +223,6 @@ function playTap() {
   o.start();
   o.stop(c.currentTime + 0.07);
 }
-
 function playTick() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -277,7 +235,6 @@ function playTick() {
   o.start();
   o.stop(c.currentTime + 0.1);
 }
-
 function playSuccess() {
   const c = audio();
   if (!c || !unlocked) return;
@@ -293,14 +250,12 @@ function playSuccess() {
     o.stop(t + 0.24);
   });
 }
-
 function startMusic() {
   const c = audio();
   if (!c || !musicGain || musicTimer) return;
   const beat = () => {
     if (!musicOn) return;
-    const notes = [196, 246.94];
-    notes.forEach((freq, i) => {
+    [196, 246.94].forEach((freq, i) => {
       const g = c.createGain();
       g.gain.value = 0.03;
       g.connect(musicGain);
@@ -315,14 +270,9 @@ function startMusic() {
   beat();
   musicTimer = window.setInterval(beat, 3200);
 }
-
 function stopMusic() {
-  if (musicTimer) {
-    clearInterval(musicTimer);
-    musicTimer = null;
-  }
+  if (musicTimer) { clearInterval(musicTimer); musicTimer = null; }
 }
-
 function unlockAudio() {
   const c = audio();
   if (!c) return;
@@ -331,7 +281,6 @@ function unlockAudio() {
   if (musicOn && !musicTimer) startMusic();
   updateAudioIcon();
 }
-
 function updateAudioIcon() {
   const onIco = document.querySelector(".ico-vol-on");
   const offIco = document.querySelector(".ico-vol-off");
@@ -341,10 +290,7 @@ function updateAudioIcon() {
   }
 }
 
-/* ==========================================================
-   Device detection
-   ========================================================== */
-
+/* Device detection */
 function detectDevice() {
   const ua = navigator.userAgent || "";
   let os = "Phone";
@@ -355,10 +301,7 @@ function detectDevice() {
   return { os, esim: /iPhone|iPad|Android/i.test(ua), ua };
 }
 
-/* ==========================================================
-   Modal / checkout
-   ========================================================== */
-
+/* Modal / checkout */
 const PAY_API = "https://icy-breeze-8412.babysomething.workers.dev/";
 const PACKAGE_PAY_ID = {
   "lumi-500": 1,
@@ -380,9 +323,7 @@ async function createPayOrder(pkg) {
   const id = PACKAGE_PAY_ID[pkg.id];
   const res = await fetch(PAY_API + "?id=" + id);
   const link = (await res.text()).trim().replace(/^"|"$/g, "");
-  if (!res.ok || !/^https?:\/\//i.test(link)) {
-    throw new Error("Payment link missing");
-  }
+  if (!res.ok || !/^https?:\/\//i.test(link)) throw new Error("Payment link missing");
   return link;
 }
 
@@ -400,9 +341,7 @@ function closeModal() {
   document.getElementById("modal").classList.add("hidden");
   document.getElementById("modal-overlay").classList.add("hidden");
   document.body.style.overflow = "";
-  if (modalTriggerElement && typeof modalTriggerElement.focus === "function") {
-    modalTriggerElement.focus();
-  }
+  if (modalTriggerElement && typeof modalTriggerElement.focus === "function") modalTriggerElement.focus();
   modalTriggerElement = null;
   activeRequest = null;
   payUrl = null;
@@ -418,17 +357,10 @@ function openModal(pkgId) {
   deviceInfo = detectDevice();
   modalTriggerElement = document.activeElement;
 
-  // Prefetch payment URL immediately
   payUrl = null;
   payOrder = createPayOrder(pkg)
-    .then((link) => {
-      payUrl = link;
-      return link;
-    })
-    .catch(() => {
-      payUrl = null;
-      return null;
-    });
+    .then((link) => { payUrl = link; return link; })
+    .catch(() => { payUrl = null; return null; });
 
   document.getElementById("modal-overlay").classList.remove("hidden");
   document.getElementById("modal").classList.remove("hidden");
@@ -444,16 +376,9 @@ function openModal(pkgId) {
   };
 
   updateFocusable();
-  setTimeout(() => {
-    if (focusableElements.length) focusableElements[0].focus();
-  }, 60);
-
+  setTimeout(() => { if (focusableElements.length) focusableElements[0].focus(); }, 60);
   runScan();
 }
-
-/* ==========================================================
-   Scan panel
-   ========================================================== */
 
 function buildScanHTML() {
   return `
@@ -479,14 +404,11 @@ function buildScanHTML() {
 function runScan() {
   scanTimers.forEach(clearTimeout);
   scanTimers = [];
-
   const total = SCAN_TITLES.length;
   const stepDuration = 1800;
   let step = 0;
-
   const advance = () => {
     if (!scanElements) return;
-
     if (step < total) {
       scanElements.steps.forEach((el, i) => {
         el.classList.toggle("is-on", i === step);
@@ -498,16 +420,11 @@ function runScan() {
       step++;
       scanTimers.push(setTimeout(advance, stepDuration));
     } else {
-      // All done
-      scanElements.steps.forEach((el) => {
-        el.classList.remove("is-on");
-        el.classList.add("is-done");
-      });
+      scanElements.steps.forEach((el) => { el.classList.remove("is-on"); el.classList.add("is-done"); });
       playSuccess();
       scanTimers.push(setTimeout(showSuccessPayoff, 500));
     }
   };
-
   advance();
 }
 
@@ -529,17 +446,9 @@ function showSuccessPayoff() {
   scanTimers.push(setTimeout(renderReview, 1100));
 }
 
-/* ==========================================================
-   Step indicator
-   ========================================================== */
-
 function checkoutDots(step) {
   if (step < 1) return "";
-  const cls = (i) => {
-    if (i < step) return "is-done";
-    if (i === step) return "is-active";
-    return "";
-  };
+  const cls = (i) => (i < step ? "is-done" : i === step ? "is-active" : "");
   return `
     <div class="checkout-steps" aria-hidden="true">
       <span class="checkout-step ${cls(1)}"></span>
@@ -548,21 +457,15 @@ function checkoutDots(step) {
     </div>`;
 }
 
-/* ==========================================================
-   Step 1 — Review
-   ========================================================== */
-
 function renderReview() {
   const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
   const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
   const body = document.getElementById("modal-body");
-
   body.innerHTML = `
     <div class="modal-panel is-active">
       ${checkoutDots(1)}
       <p class="checkout-title">Review your order</p>
       <p class="checkout-sub">Confirm the plan and network before continuing.</p>
-
       <div class="checkout-summary">
         <div class="checkout-summary__left">
           <span class="name">${pkg.name}</span>
@@ -570,31 +473,21 @@ function renderReview() {
         </div>
         <span class="checkout-summary__price">${formatPkr(pkg.pricePkr)}</span>
       </div>
-
       <div class="fact-list">
         <div class="fact"><span>Device</span><strong>${deviceInfo.os}</strong></div>
-        <div class="fact"><span>Delivery</span><strong>WhatsApp · Instant</strong></div>
+        <div class="fact"><span>Delivery</span><strong>Email · Instant</strong></div>
         <div class="fact"><span>Total</span><strong>${formatPkr(pkg.pricePkr)}</strong></div>
       </div>
-
       <div class="checkout-actions">
         <button type="button" class="btn btn--primary" id="step-review-next">Continue to details</button>
         <button type="button" class="btn btn--secondary" id="step-review-cancel">Cancel</button>
       </div>
     </div>`;
-
   document.getElementById("step-review-next").addEventListener("click", renderDetails);
   document.getElementById("step-review-cancel").addEventListener("click", closeModal);
   updateFocusable();
-  setTimeout(() => {
-    const el = document.getElementById("step-review-next");
-    if (el) el.focus();
-  }, 60);
+  setTimeout(() => { const el = document.getElementById("step-review-next"); if (el) el.focus(); }, 60);
 }
-
-/* ==========================================================
-   Step 2 — Details
-   ========================================================== */
 
 function renderDetails() {
   const body = document.getElementById("modal-body");
@@ -603,79 +496,52 @@ function renderDetails() {
       ${checkoutDots(2)}
       <p class="checkout-title">Your details</p>
       <p class="checkout-sub">We'll send your eSIM confirmation here.</p>
-
       <form class="checkout-form" id="checkout-form" novalidate>
         <div class="input-group">
           <label for="email">Email address</label>
           <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
         </div>
         <div class="input-group">
-          <label for="whatsapp">WhatsApp number</label>
+          <label for="whatsapp">Instagram handle (optional)</label>
           <div class="prefix">
-            <span>+92</span>
-            <input type="tel" id="whatsapp" placeholder="300 1234567" inputmode="numeric" autocomplete="tel" />
+            <span>@</span>
+            <input type="text" id="instagram" placeholder="yourhandle" autocomplete="off" />
           </div>
         </div>
       </form>
-
       <div class="checkout-actions">
         <button type="button" class="btn btn--primary" id="step-details-next">Continue to payment</button>
         <button type="button" class="btn btn--secondary" id="step-details-back">Back</button>
       </div>
     </div>`;
-
   document.getElementById("step-details-next").addEventListener("click", validateAndContinue);
   document.getElementById("step-details-back").addEventListener("click", renderReview);
   updateFocusable();
-  setTimeout(() => {
-    const el = document.getElementById("email");
-    if (el) el.focus();
-  }, 60);
+  setTimeout(() => { const el = document.getElementById("email"); if (el) el.focus(); }, 60);
 }
 
 function validateAndContinue() {
   const email = document.getElementById("email");
-  const whatsapp = document.getElementById("whatsapp");
   let valid = true;
-
   if (!email.value || !email.value.includes("@")) {
     email.style.borderColor = "var(--danger)";
     valid = false;
   } else {
     email.style.borderColor = "";
   }
-
-  const phoneClean = whatsapp.value.replace(/\D/g, "");
-  if (!phoneClean || phoneClean.length < 10) {
-    whatsapp.style.borderColor = "var(--danger)";
-    valid = false;
-  } else {
-    whatsapp.style.borderColor = "";
-  }
-
-  if (!valid) {
-    playTick();
-    return;
-  }
-
+  if (!valid) { playTick(); return; }
   renderPayment();
 }
-
-/* ==========================================================
-   Step 3 — Payment
-   ========================================================== */
 
 function renderPayment() {
   const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
   const body = document.getElementById("modal-body");
   const payReady = payUrl !== null;
-
   body.innerHTML = `
     <div class="modal-panel is-active">
       ${checkoutDots(3)}
       <p class="checkout-title">Choose payment method</p>
       <p class="checkout-sub">Pay securely with Easypaisa.</p>
-
       <div class="easypaisa-option">
         <img src="easypaisa.png" alt="Easypaisa" />
         <div class="easypaisa-option__text">
@@ -688,11 +554,10 @@ function renderPayment() {
           </svg>
         </span>
       </div>
-
       <div class="next-steps">
         <div class="next-step">
           <span class="next-step__num">1</span>
-          <span class="next-step__text"><strong>Instant WhatsApp confirmation</strong> with your eSIM profile and installation steps.</span>
+          <span class="next-step__text"><strong>Email confirmation</strong> with your eSIM profile and installation steps.</span>
         </div>
         <div class="next-step">
           <span class="next-step__num">2</span>
@@ -703,7 +568,6 @@ function renderPayment() {
           <span class="next-step__text"><strong>You're online</strong> — usually within 2 minutes.</span>
         </div>
       </div>
-
       <div class="checkout-actions">
         <button type="button" class="btn btn--primary" id="pay-now" ${!payReady ? "disabled" : ""}>
           ${payReady ? "Pay " + formatPkr(pkg.pricePkr) : "Preparing payment link…"}
@@ -725,29 +589,21 @@ function renderPayment() {
   document.getElementById("pay-now").addEventListener("click", handlePay);
   document.getElementById("step-payment-back").addEventListener("click", renderDetails);
   updateFocusable();
-  setTimeout(() => {
-    const el = document.getElementById("pay-now");
-    if (el && !el.disabled) el.focus();
-  }, 60);
+  setTimeout(() => { const el = document.getElementById("pay-now"); if (el && !el.disabled) el.focus(); }, 60);
 }
 
 function handlePay() {
   const btn = document.getElementById("pay-now");
   if (!btn || btn.disabled) return;
-
   btn.disabled = true;
   btn.classList.add("btn--loading");
   btn.textContent = "Redirecting to payment…";
-
   const proceed = () => {
     if (payUrl) {
       window.location.assign(payUrl);
     } else {
       createPayOrder(PACKAGES.find((p) => p.id === activeRequest.packageId))
-        .then((link) => {
-          if (link) window.location.assign(link);
-          else throw new Error("no link");
-        })
+        .then((link) => { if (link) window.location.assign(link); else throw new Error("no link"); })
         .catch(() => {
           btn.disabled = false;
           btn.classList.remove("btn--loading");
@@ -757,32 +613,21 @@ function handlePay() {
         });
     }
   };
-
   setTimeout(proceed, 700);
 }
-
-/* ==========================================================
-   Testimonials (empty state until real reviews exist)
-   ========================================================== */
 
 function renderTestimonials() {
   const list = document.getElementById("testimonial-list");
   if (!list) return;
-
-  // When you have real reviews, put them here.
   const reviews = [];
-
   if (reviews.length === 0) {
     list.innerHTML = `
       <div class="testimonial-empty" style="grid-column:1/-1;">
-        <p>We're a new service and are collecting our first customer reviews. Order today — your feedback helps others decide, and you'll receive priority WhatsApp support.</p>
+        <p>We're a new service and are collecting our first customer reviews. Order today — your feedback helps others decide, and you'll receive priority Instagram support.</p>
       </div>`;
     return;
   }
-
-  list.innerHTML = reviews
-    .map(
-      (r) => `
+  list.innerHTML = reviews.map((r) => `
     <div class="testimonial">
       <div class="testimonial__stars">${"★".repeat(r.stars)}${"☆".repeat(5 - r.stars)}</div>
       <p class="testimonial__quote">${r.quote}</p>
@@ -793,42 +638,29 @@ function renderTestimonials() {
           <span>${r.city}</span>
         </div>
       </div>
-    </div>`
-    )
-    .join("");
+    </div>`).join("");
 }
 
-/* ==========================================================
-   Events
-   ========================================================== */
-
 document.addEventListener("DOMContentLoaded", () => {
-  // Render packages + testimonials
   paintPackages();
   renderTestimonials();
 
-  // Footer year
   const yearEl = document.getElementById("footer-year");
   if (yearEl) yearEl.textContent = new Date().getFullYear();
 
-  // Initial view
   const hash = (location.hash || "#home").slice(1);
   const validViews = ["home", "install", "faq", "about", "contact", "refund", "terms", "privacy"];
   const initialView = validViews.includes(hash) ? hash : "home";
   showView(initialView);
 
-  // Audio icon initial
   updateAudioIcon();
 
-  // Unlock audio on first interaction
   document.body.addEventListener("pointerdown", (e) => {
     unlockAudio();
     if (e.target.closest("button, a, .tab, .pkg-cta, .btn, [data-view], [data-get]")) playTap();
   });
 
-  // Global click handler (view switching, scroll, network pills, modal)
   document.body.addEventListener("click", (e) => {
-    // 1. data-scroll — scroll to packages in active view
     const scrollEl = e.target.closest("[data-scroll]");
     if (scrollEl) {
       e.preventDefault();
@@ -839,7 +671,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 2. data-view — switch view
     const viewEl = e.target.closest("[data-view]");
     if (viewEl) {
       e.preventDefault();
@@ -848,7 +679,6 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 3. data-net — change network
     const netBtn = e.target.closest("[data-net]");
     if (netBtn) {
       const pkgId = netBtn.dataset.pkg;
@@ -870,77 +700,42 @@ document.addEventListener("DOMContentLoaded", () => {
       return;
     }
 
-    // 4. data-get — open checkout modal
     const getBtn = e.target.closest("[data-get]");
-    if (getBtn) {
-      openModal(getBtn.dataset.get);
-      return;
-    }
+    if (getBtn) { openModal(getBtn.dataset.get); return; }
 
-    // 5. click outside modal → close
-    if (e.target.id === "modal-overlay") {
-      closeModal();
-      return;
-    }
-
-    // 6. modal close button
-    if (e.target.closest("#modal-close")) {
-      closeModal();
-      return;
-    }
+    if (e.target.id === "modal-overlay") { closeModal(); return; }
+    if (e.target.closest("#modal-close")) { closeModal(); return; }
   });
 
-  // Audio toggle
   const audioToggle = document.getElementById("audio-toggle");
   if (audioToggle) {
     audioToggle.addEventListener("click", () => {
       musicOn = !musicOn;
       if (musicGain) musicGain.gain.value = musicOn ? 0.08 : 0;
-      if (musicOn) {
-        unlockAudio();
-        stopMusic();
-        startMusic();
-      } else {
-        stopMusic();
-      }
+      if (musicOn) { unlockAudio(); stopMusic(); startMusic(); }
+      else stopMusic();
       audioToggle.setAttribute("aria-label", musicOn ? "Mute ambient sound" : "Play ambient sound");
       updateAudioIcon();
     });
   }
 
-  // Resume audio when tab regains focus
   document.addEventListener("visibilitychange", () => {
-    if (document.hidden) {
-      stopMusic();
-    } else if (unlocked && musicOn && !musicTimer) {
-      startMusic();
-    }
+    if (document.hidden) stopMusic();
+    else if (unlocked && musicOn && !musicTimer) startMusic();
   });
 
-  // Keyboard — Escape closes modal, Tab trapped inside modal
   document.addEventListener("keydown", (e) => {
     const modal = document.getElementById("modal");
     const modalOpen = modal && !modal.classList.contains("hidden");
-
-    if (e.key === "Escape" && modalOpen) {
-      closeModal();
-      return;
-    }
-
+    if (e.key === "Escape" && modalOpen) { closeModal(); return; }
     if (modalOpen && e.key === "Tab") {
       if (focusableElements.length === 0) return;
       const first = focusableElements[0];
       const last = focusableElements[focusableElements.length - 1];
       if (e.shiftKey) {
-        if (document.activeElement === first) {
-          e.preventDefault();
-          last.focus();
-        }
+        if (document.activeElement === first) { e.preventDefault(); last.focus(); }
       } else {
-        if (document.activeElement === last) {
-          e.preventDefault();
-          first.focus();
-        }
+        if (document.activeElement === last) { e.preventDefault(); first.focus(); }
       }
     }
   });
