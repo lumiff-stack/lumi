@@ -5,7 +5,7 @@
 /* ⚠️  API key is visible in page source — testing only.
    Before going live, rotate this key and move the API call
    to a server-side endpoint (your Cloudflare Worker). */
-const OPENROUTER_API_KEY = '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';
+const OPENROUTER_API_KEY = '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';
 const OPENROUTER_URL = 'https://openrouter.ai/api/v1/chat/completions';
 const OPENROUTER_MODEL = 'inclusionai/ling-3.0-flash-vl:free';
 const OPENROUTER_TEMPERATURE = 0.6;
