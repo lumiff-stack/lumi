@@ -1,5 +1,6 @@
 /* ==========================================================
    Lumi — Floating support chat with OpenRouter AI
+   Mobile keyboard handling: CSS variable approach
    ========================================================== */
 
 const OPENROUTER_API_KEY = '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';
@@ -142,7 +143,56 @@ let chatWidget, chatLauncher, chatPanel, chatPanelClose, chatGreeting,
     chatGreetingClose, chatMessages, chatForm, chatTextarea, chatSend;
 
 /* ═══════════════════════════════════════════════════════════
-   SCROLL LOCK + VIEWPORT HEIGHT (mobile keyboard fix)
+   KEYBOARD INSET — single source of truth
+   Formula: max(0, window.innerHeight - vv.height - vv.offsetTop)
+   - iOS Safari: offsetTop > 0 when keyboard open
+   - Android Chrome: offsetTop stays 0, innerHeight shrinks
+   ═══════════════════════════════════════════════════════════ */
+
+let keyboardRaf = null;
+
+function updateKeyboardInset() {
+  if (keyboardRaf) return;
+  keyboardRaf = requestAnimationFrame(() => {
+    keyboardRaf = null;
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    // Desktop — no inset, clear variable
+    if (window.innerWidth > 600) {
+      document.documentElement.style.removeProperty("--keyboard-inset");
+      return;
+    }
+
+    const inset = Math.max(
+      0,
+      window.innerHeight - vv.height - vv.offsetTop
+    );
+    document.documentElement.style.setProperty(
+      "--keyboard-inset",
+      inset + "px"
+    );
+  });
+}
+
+function installKeyboardInsetsObserver() {
+  if (!window.visualViewport) return;
+  const vv = window.visualViewport;
+
+  vv.addEventListener("resize", updateKeyboardInset);
+  vv.addEventListener("scroll", updateKeyboardInset);
+
+  // Orientation changes
+  window.addEventListener("orientationchange", () => {
+    setTimeout(updateKeyboardInset, 200);
+  });
+
+  // Initial
+  updateKeyboardInset();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SCROLL LOCK (mobile only)
    ═══════════════════════════════════════════════════════════ */
 
 function lockBodyScroll() {
@@ -153,29 +203,6 @@ function lockBodyScroll() {
 function unlockBodyScroll() {
   document.documentElement.classList.remove("has-chat-open");
   document.body.classList.remove("has-chat-open");
-}
-
-function resetPanelPosition() {
-  chatPanel.style.top = "";
-  chatPanel.style.height = "";
-  chatPanel.style.bottom = "";
-}
-
-function updatePanelHeight() {
-  if (!window.visualViewport) return;
-
-  // Desktop — reset to CSS defaults
-  if (window.innerWidth > 600) {
-    resetPanelPosition();
-    return;
-  }
-
-  const vv = window.visualViewport;
-  // Pin the panel to the top of the visual viewport and shrink
-  // it to the visible height above the keyboard
-  chatPanel.style.top = vv.offsetTop + "px";
-  chatPanel.style.height = vv.height + "px";
-  chatPanel.style.bottom = "auto";
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -259,34 +286,10 @@ document.addEventListener("DOMContentLoaded", () => {
   chatTextarea = document.getElementById("chat-textarea");
   chatSend = document.getElementById("chat-send");
 
+  installKeyboardInsetsObserver();
   bindEvents();
   scheduleGreeting();
   seedWelcomeMessage();
-
-  // Watch for keyboard / viewport changes on mobile
-  if (window.visualViewport) {
-    window.visualViewport.addEventListener("resize", () => {
-      if (chatState.isOpen) {
-        updatePanelHeight();
-        scrollMessagesToBottom();
-      }
-    });
-    window.visualViewport.addEventListener("scroll", () => {
-      if (chatState.isOpen) updatePanelHeight();
-    });
-  }
-
-  // Handle orientation / window resize
-  window.addEventListener("resize", () => {
-    if (!chatState.isOpen) return;
-    if (window.innerWidth > 600) {
-      unlockBodyScroll();
-      resetPanelPosition();
-    } else {
-      lockBodyScroll();
-      updatePanelHeight();
-    }
-  });
 
   // Hide chat when checkout modal is open
   const modal = document.getElementById("modal");
@@ -313,6 +316,11 @@ function bindEvents() {
     openPanel();
   });
 
+  // CRITICAL: prevent the send button from stealing focus
+  // from the textarea. This keeps the keyboard open on mobile.
+  chatSend.addEventListener("mousedown", (e) => e.preventDefault());
+  chatSend.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
     sendMessage();
@@ -328,14 +336,6 @@ function bindEvents() {
       e.preventDefault();
       if (!chatSend.disabled) sendMessage();
     }
-  });
-
-  // When keyboard opens (textarea focused), re-pin and scroll
-  chatTextarea.addEventListener("focus", () => {
-    setTimeout(() => {
-      updatePanelHeight();
-      scrollMessagesToBottom();
-    }, 350);
   });
 
   document.addEventListener("keydown", (e) => {
@@ -396,9 +396,13 @@ function openPanel() {
   dismissGreeting();
 
   lockBodyScroll();
-  updatePanelHeight();
 
-  if (window.innerWidth > 600) setTimeout(() => chatTextarea.focus(), 300);
+  // On desktop, autofocus the textarea. On mobile, let the user tap
+  // — iOS won't honor programmatic focus from a non-gesture anyway.
+  if (window.innerWidth > 600) {
+    setTimeout(() => chatTextarea.focus(), 300);
+  }
+
   scrollMessagesToBottom();
 }
 
@@ -410,7 +414,7 @@ function closePanel() {
   chatLauncher.setAttribute("aria-label", "Open support chat");
 
   unlockBodyScroll();
-  resetPanelPosition();
+  chatTextarea.blur();
 }
 
 /* ═══════════════════════════════════════════════════════════
@@ -447,9 +451,11 @@ async function sendMessage() {
 
   chatTextarea.value = "";
   autoResizeTextarea();
+
+  // CRITICAL: only disable the SEND button — never the textarea.
+  // Disabling the textarea blurs it, which closes the keyboard.
   chatSend.disabled = true;
   chatState.isSending = true;
-  chatTextarea.disabled = true;
 
   showTypingIndicator();
 
@@ -469,9 +475,14 @@ async function sendMessage() {
     console.error("[Lumi chat] error:", err);
   } finally {
     chatState.isSending = false;
-    chatTextarea.disabled = false;
     chatSend.disabled = !chatTextarea.value.trim();
-    if (window.innerWidth > 600) chatTextarea.focus();
+
+    // Only refocus on desktop — iOS Safari ignores programmatic
+    // focus from async contexts, so calling it on mobile does nothing
+    // useful and may even cause a brief layout flash.
+    if (window.innerWidth > 600) {
+      chatTextarea.focus();
+    }
   }
 }
 
