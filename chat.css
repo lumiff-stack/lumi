@@ -451,12 +451,23 @@
     font-size: 0.9375rem;
   }
 
-  /* Input area floats above the keyboard using the inset variable */
+  /* The input area rides above the keyboard */
   .chat-panel__input {
     padding-bottom: calc(
       12px + var(--keyboard-inset, 0px) + env(safe-area-inset-bottom)
     );
-    transition: padding-bottom 0.1s ease-out;
+  }
+}
+
+/* ==========================================================
+   Body scroll lock while chat is open (mobile)
+   ========================================================== */
+
+@media (max-width: 600px) {
+  html.has-chat-open,
+  body.has-chat-open {
+    overflow: hidden;
+    overscroll-behavior: none;
   }
 }
 
