@@ -146,7 +146,7 @@ let scrollPinRaf = null;
 let isPinningScroll = false;
 
 /* ═══════════════════════════════════════════════════════════
-   KEYBOARD INSET — with guards for iOS vs Android
+   KEYBOARD INSET
    ═══════════════════════════════════════════════════════════ */
 
 let insetRaf = null;
@@ -155,18 +155,8 @@ let lastInset = -1;
 function computeKeyboardInset() {
   const vv = window.visualViewport;
   if (!vv) return 0;
-
-  // iOS: visualViewport scrolls upward → offsetTop > 0
-  // Android: layout viewport shrinks → innerHeight drops
-  const inset = Math.max(
-    0,
-    window.innerHeight - vv.height - vv.offsetTop
-  );
-
-  // Ignore tiny fluctuations (URL bar collapse = ~60-100px)
-  // Keyboard is reliably > 150px on all devices
+  const inset = Math.max(0, window.innerHeight - vv.height - vv.offsetTop);
   if (inset < 150) return 0;
-
   return inset;
 }
 
@@ -175,48 +165,32 @@ function updateKeyboardInset() {
   insetRaf = requestAnimationFrame(() => {
     insetRaf = null;
     const inset = computeKeyboardInset();
-
-    // Skip write if unchanged (prevents layout thrash)
     if (inset === lastInset) return;
     lastInset = inset;
-
-    document.documentElement.style.setProperty(
-      "--keyboard-inset",
-      inset + "px"
-    );
+    document.documentElement.style.setProperty("--keyboard-inset", inset + "px");
   });
 }
 
 function installKeyboardObserver() {
   const vv = window.visualViewport;
   if (!vv) return;
-
   vv.addEventListener("resize", updateKeyboardInset);
   vv.addEventListener("scroll", updateKeyboardInset);
-
   window.addEventListener("orientationchange", () => {
-    setTimeout(() => {
-      lastInset = -1;
-      updateKeyboardInset();
-    }, 250);
+    setTimeout(() => { lastInset = -1; updateKeyboardInset(); }, 250);
   });
-
   updateKeyboardInset();
 }
 
 /* ═══════════════════════════════════════════════════════════
-   SCROLL PINNING — prevents iOS from dragging the fixed
-   panel off-screen when the keyboard opens
+   SCROLL PINNING
    ═══════════════════════════════════════════════════════════ */
 
 function startScrollPin() {
   if (isPinningScroll) return;
   isPinningScroll = true;
-
   const pin = () => {
     if (!isPinningScroll) return;
-    // iOS Safari auto-scrolls the page when keyboard opens.
-    // Pinning back to 0 keeps the fixed panel in place.
     if (window.scrollY !== 0) window.scrollTo(0, 0);
     scrollPinRaf = requestAnimationFrame(pin);
   };
@@ -232,28 +206,20 @@ function stopScrollPin() {
 }
 
 /* ═══════════════════════════════════════════════════════════
-   MESSAGES RESIZE OBSERVER — keeps latest message visible
-   when the panel height changes (keyboard open/close)
+   MESSAGES RESIZE OBSERVER
    ═══════════════════════════════════════════════════════════ */
 
 function isNearBottom() {
   return (
-    chatMessages.scrollHeight -
-      chatMessages.scrollTop -
-      chatMessages.clientHeight <
-    80
+    chatMessages.scrollHeight - chatMessages.scrollTop - chatMessages.clientHeight < 80
   );
 }
 
 function installMessagesObserver() {
   if (!window.ResizeObserver) return;
   if (messagesResizeObserver) return;
-
   messagesResizeObserver = new ResizeObserver(() => {
-    // Only auto-scroll if user was already at/near bottom
-    if (isNearBottom()) {
-      scrollMessagesToBottom();
-    }
+    if (isNearBottom()) scrollMessagesToBottom();
   });
   messagesResizeObserver.observe(chatMessages);
 }
@@ -359,7 +325,6 @@ document.addEventListener("DOMContentLoaded", () => {
   scheduleGreeting();
   seedWelcomeMessage();
 
-  // Hide chat when checkout modal is open
   const modal = document.getElementById("modal");
   if (modal) {
     const observer = new MutationObserver(() => {
@@ -384,10 +349,12 @@ function bindEvents() {
     openPanel();
   });
 
-  // Prevent the send button from stealing focus from the textarea.
-  // This keeps the keyboard open across sends.
-  chatSend.addEventListener("mousedown", (e) => e.preventDefault());
-  chatSend.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+  // Desktop only: prevent the send button from stealing focus
+  // from the textarea (which keeps the keyboard open).
+  // On mobile this would block the click entirely, so we skip it.
+  if (window.innerWidth > 600) {
+    chatSend.addEventListener("mousedown", (e) => e.preventDefault());
+  }
 
   chatForm.addEventListener("submit", (e) => {
     e.preventDefault();
@@ -406,7 +373,6 @@ function bindEvents() {
     }
   });
 
-  // When the keyboard opens, re-measure and scroll to bottom
   chatTextarea.addEventListener("focus", () => {
     startScrollPin();
     setTimeout(() => {
@@ -417,7 +383,6 @@ function bindEvents() {
   });
 
   chatTextarea.addEventListener("blur", () => {
-    // Small delay so blur fires after the keyboard is truly closing
     setTimeout(() => {
       stopScrollPin();
       lastInset = -1;
@@ -502,7 +467,6 @@ function closePanel() {
   unlockBodyScroll();
   chatTextarea.blur();
 
-  // Reset inset after closing
   lastInset = -1;
   document.documentElement.style.setProperty("--keyboard-inset", "0px");
 }
@@ -542,8 +506,6 @@ async function sendMessage() {
   chatTextarea.value = "";
   autoResizeTextarea();
 
-  // Only disable the send button — NEVER the textarea.
-  // Disabling the textarea would blur it and close the keyboard.
   chatSend.disabled = true;
   chatState.isSending = true;
 
@@ -567,11 +529,10 @@ async function sendMessage() {
     chatState.isSending = false;
     chatSend.disabled = !chatTextarea.value.trim();
 
-    // Desktop only — mobile keeps focus automatically because
-    // we never disabled the textarea.
-    if (window.innerWidth > 600) {
-      chatTextarea.focus();
-    }
+    // Re-focus on ALL devices to keep the keyboard open.
+    // preventScroll stops iOS from auto-scrolling the layout.
+    chatTextarea.focus({ preventScroll: true });
+    scrollMessagesToBottom();
   }
 }
 
@@ -609,9 +570,6 @@ function hideTypingIndicator() {
 }
 
 function scrollMessagesToBottom() {
-  // Use rAF + direct assignment for reliability across browsers.
-  // `scrollTo({ behavior: "smooth" })` gets cancelled by layout shifts
-  // on iOS during keyboard animation, so we use instant scroll.
   requestAnimationFrame(() => {
     chatMessages.scrollTop = chatMessages.scrollHeight;
   });
