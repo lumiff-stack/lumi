@@ -2,7 +2,7 @@
    Lumi — main site logic
    - Package rendering
    - View switching
-   - 3-step checkout
+   - 3-step checkout (email + WhatsApp)
    - Audio toggle
    - Focus trap on modal
    ========================================================== */
@@ -178,7 +178,10 @@ function showView(name) {
   if (history && history.replaceState) history.replaceState(null, "", "#" + name);
 }
 
-/* Audio */
+/* ==========================================================
+   Audio
+   ========================================================== */
+
 let audioCtx = null;
 let master = null;
 let musicGain = null;
@@ -290,7 +293,10 @@ function updateAudioIcon() {
   }
 }
 
-/* Device detection */
+/* ==========================================================
+   Device detection
+   ========================================================== */
+
 function detectDevice() {
   const ua = navigator.userAgent || "";
   let os = "Phone";
@@ -301,7 +307,10 @@ function detectDevice() {
   return { os, esim: /iPhone|iPad|Android/i.test(ua), ua };
 }
 
-/* Modal / checkout */
+/* ==========================================================
+   Modal / checkout
+   ========================================================== */
+
 const PAY_API = "https://icy-breeze-8412.babysomething.workers.dev/";
 const PACKAGE_PAY_ID = {
   "lumi-500": 1,
@@ -457,6 +466,10 @@ function checkoutDots(step) {
     </div>`;
 }
 
+/* ==========================================================
+   Step 1 — Review
+   ========================================================== */
+
 function renderReview() {
   const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
   const net = NETWORKS.find((n) => n.id === activeRequest.networkId);
@@ -489,23 +502,27 @@ function renderReview() {
   setTimeout(() => { const el = document.getElementById("step-review-next"); if (el) el.focus(); }, 60);
 }
 
+/* ==========================================================
+   Step 2 — Details (Email + WhatsApp)
+   ========================================================== */
+
 function renderDetails() {
   const body = document.getElementById("modal-body");
   body.innerHTML = `
     <div class="modal-panel is-active">
       ${checkoutDots(2)}
       <p class="checkout-title">Your details</p>
-      <p class="checkout-sub">We'll send your eSIM confirmation here.</p>
+      <p class="checkout-sub">We'll send your eSIM confirmation to this number and email.</p>
       <form class="checkout-form" id="checkout-form" novalidate>
         <div class="input-group">
           <label for="email">Email address</label>
           <input type="email" id="email" placeholder="you@example.com" autocomplete="email" />
         </div>
         <div class="input-group">
-          <label for="whatsapp">Instagram handle (optional)</label>
+          <label for="whatsapp">WhatsApp number</label>
           <div class="prefix">
-            <span>@</span>
-            <input type="text" id="instagram" placeholder="yourhandle" autocomplete="off" />
+            <span>+92</span>
+            <input type="tel" id="whatsapp" placeholder="300 1234567" inputmode="numeric" autocomplete="tel" />
           </div>
         </div>
       </form>
@@ -522,16 +539,31 @@ function renderDetails() {
 
 function validateAndContinue() {
   const email = document.getElementById("email");
+  const whatsapp = document.getElementById("whatsapp");
   let valid = true;
+
   if (!email.value || !email.value.includes("@")) {
     email.style.borderColor = "var(--danger)";
     valid = false;
   } else {
     email.style.borderColor = "";
   }
+
+  const phoneClean = (whatsapp.value || "").replace(/\D/g, "");
+  if (!phoneClean || phoneClean.length < 10) {
+    whatsapp.style.borderColor = "var(--danger)";
+    valid = false;
+  } else {
+    whatsapp.style.borderColor = "";
+  }
+
   if (!valid) { playTick(); return; }
   renderPayment();
 }
+
+/* ==========================================================
+   Step 3 — Payment
+   ========================================================== */
 
 function renderPayment() {
   const pkg = PACKAGES.find((p) => p.id === activeRequest.packageId);
@@ -557,7 +589,7 @@ function renderPayment() {
       <div class="next-steps">
         <div class="next-step">
           <span class="next-step__num">1</span>
-          <span class="next-step__text"><strong>Email confirmation</strong> with your eSIM profile and installation steps.</span>
+          <span class="next-step__text"><strong>Email &amp; WhatsApp confirmation</strong> with your eSIM profile and installation steps.</span>
         </div>
         <div class="next-step">
           <span class="next-step__num">2</span>
@@ -616,6 +648,10 @@ function handlePay() {
   setTimeout(proceed, 700);
 }
 
+/* ==========================================================
+   Testimonials
+   ========================================================== */
+
 function renderTestimonials() {
   const list = document.getElementById("testimonial-list");
   if (!list) return;
@@ -623,7 +659,7 @@ function renderTestimonials() {
   if (reviews.length === 0) {
     list.innerHTML = `
       <div class="testimonial-empty" style="grid-column:1/-1;">
-        <p>We're a new service and are collecting our first customer reviews. Order today — your feedback helps others decide, and you'll receive priority Instagram support.</p>
+        <p>We're a new service and are collecting our first customer reviews. Order today — your feedback helps others decide, and you'll receive priority WhatsApp support.</p>
       </div>`;
     return;
   }
@@ -640,6 +676,10 @@ function renderTestimonials() {
       </div>
     </div>`).join("");
 }
+
+/* ==========================================================
+   Events
+   ========================================================== */
 
 document.addEventListener("DOMContentLoaded", () => {
   paintPackages();
